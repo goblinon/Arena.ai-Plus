@@ -1,0 +1,138 @@
+/* LMArena Plus Extension Styles */
+
+/* Column header */
+.lmarena-price-header {
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  padding: 8px 12px;
+}
+
+/* Price cell */
+.lmarena-price-cell {
+  text-align: right;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  cursor: help;
+  position: relative;
+  /* Ensure full cell is hoverable */
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.lmarena-price-cell:hover {
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* N/A state */
+.lmarena-price-cell--na {
+  color: #888;
+  font-style: italic;
+}
+
+/* Tooltip container */
+.lmarena-price-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5e;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: #e0e0e0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.lmarena-price-tooltip--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Tooltip content - Model name from source */
+.lmarena-price-tooltip__total,
+.lmarena-price-tooltip__model-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #3a3a5e;
+  word-break: break-word;
+}
+
+.lmarena-price-tooltip__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.lmarena-price-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lmarena-price-tooltip__label {
+  color: #a0a0a0;
+}
+
+.lmarena-price-tooltip__value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #4ade80;
+}
+
+.lmarena-price-tooltip__source {
+  font-size: 11px;
+  color: #666;
+  text-align: right;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #3a3a5e;
+}
+
+/* Ensure injected column doesn't break table layout */
+table th.lmarena-price-header,
+table td.lmarena-price-cell {
+  min-width: 120px;
+  max-width: 160px;
+}
+
+/* Loading state */
+.lmarena-price-cell--loading {
+  color: #666;
+}
+
+.lmarena-price-cell--loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 2px solid #3a3a5e;
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: lmarena-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes lmarena-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading header indicator */
+.lmarena-price-header--loading::after {
+  content: ' ⏳';
+  font-size: 12px;
+}

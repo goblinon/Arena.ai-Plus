@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMArena Plus</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="popup-container">
+    <h1 class="popup-title">LMArena Plus</h1>
+
+    <div class="setting-group">
+      <label class="setting-label" for="data-provider">Data Provider:</label>
+      <select id="data-provider" class="setting-select">
+        <option value="openrouter">OpenRouter</option>
+        <option value="litellm">LiteLLM</option>
+        <option value="helicone">Helicone</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label class="setting-label" for="token-unit">Price per tokens:</label>
+      <select id="token-unit" class="setting-select">
+        <option value="1000000">1M tokens</option>
+        <option value="100000">100K tokens</option>
+        <option value="1000">1K tokens</option>
+      </select>
+    </div>
+
+    <a href="https://google.com" target="_blank" class="donate-button">
+      Love LMArena Plus? Feel free to donate and keep the project alive!
+    </a>
+
+    <div class="attribution" id="attribution">
+      All data is provided by <a href="https://helicone.ai" target="_blank">helicone.ai</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
