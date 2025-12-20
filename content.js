@@ -565,10 +565,6 @@
     }
 
     _formatCost(cost) {
-      if (cost === 0) return '0.00';
-      if (cost < 0.0001) return cost.toFixed(6);
-      if (cost < 0.01) return cost.toFixed(4);
-      if (cost < 1) return cost.toFixed(3);
       return cost.toFixed(2);
     }
   }
@@ -675,7 +671,11 @@
       const th = document.createElement('th');
       th.className = 'lmarena-price-header';
       if (showLoading) th.classList.add('lmarena-price-header--loading');
-      th.textContent = 'Price to Run';
+
+      // Add icon and text
+      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      th.innerHTML = `Pricing <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
     }
@@ -750,10 +750,6 @@
     }
 
     _formatCost(cost) {
-      if (cost === 0) return '0.00';
-      if (cost < 0.0001) return cost.toFixed(6);
-      if (cost < 0.01) return cost.toFixed(4);
-      if (cost < 1) return cost.toFixed(3);
       return cost.toFixed(2);
     }
   }

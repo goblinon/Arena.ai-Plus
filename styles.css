@@ -2,19 +2,33 @@
 
 /* Column header */
 .lmarena-price-header {
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: inherit;
+  color: inherit;
   white-space: nowrap;
-  text-align: right;
-  padding: 8px 12px;
+  text-align: left;
+  padding: 14px 24px;
+}
+
+/* Header icon */
+.lmarena-price-header__icon {
+  display: inline;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-left: 6px;
+  opacity: 0.9;
 }
 
 /* Price cell */
 .lmarena-price-cell {
+  font-family: inherit;
+  font-size: 14px;
+  color: inherit;
   text-align: right;
-  padding: 8px 12px;
+  padding: 14px 24px;
   white-space: nowrap;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 13px;
   cursor: help;
   position: relative;
   /* Ensure full cell is hoverable */
@@ -103,8 +117,8 @@
 /* Ensure injected column doesn't break table layout */
 table th.lmarena-price-header,
 table td.lmarena-price-cell {
-  min-width: 120px;
-  max-width: 160px;
+  min-width: 140px;
+  max-width: 200px;
 }
 
 /* Loading state */
