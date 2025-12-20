@@ -1,3 +1,3 @@
 # LMArena Plus
 
-Adds pricing information and other useful data to LMArena's leaderboard tables.
+A Chrome Extension that adds pricing information and other useful data to LMArena's leaderboard tables.
