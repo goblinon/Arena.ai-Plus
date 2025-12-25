@@ -30,13 +30,26 @@
     TOOLTIP_HIDE_DELAY: 100,
     TOKEN_UNIT_KEY: 'lmarena-token-unit',
     PROVIDER_KEY: 'lmarena-data-provider',
+    COLUMN_VISIBILITY_KEY: 'lmarena-column-visibility',
     DEFAULT_TOKEN_UNIT: 1000000,
-    DEFAULT_PROVIDER: 'openrouter'
+    DEFAULT_PROVIDER: 'openrouter',
+    DEFAULT_COLUMN_VISIBILITY: {
+      'rank': true,
+      'model': true,
+      'arena-score': true,
+      '95-ci': true,
+      'votes': true,
+      'organization': true,
+      'license': true,
+      'pricing': true,
+      'elo-per-dollar': true
+    }
   };
 
   // Global settings
   let currentTokenUnit = CONFIG.DEFAULT_TOKEN_UNIT;
   let currentProvider = CONFIG.DEFAULT_PROVIDER;
+  let currentColumnVisibility = { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
 
   // ============================================
   // Token Unit Helpers
@@ -54,16 +67,137 @@
     return costPer1M * (targetUnit / 1000000);
   }
 
+  // ============================================
+  // Elo per Dollar Helpers (Logarithmic Formula)
+  // ============================================
+  const ELO_BASELINE = 1350;
+
+  /**
+   * Calculate Value Score using logarithmic price compression
+   * Formula: (Elo - baseline) / log(1 + Price)
+   * 
+   * This formula compresses the "price penalty" - for a business, the difference
+   * between $5 and $30 is not "6x the pain", it's just a higher tier of operating cost.
+   * 
+   * The log(1 + Price) ensures we never divide by zero for free models.
+   * 
+   * @param {number} arenaScore - The model's Arena Score (Elo)
+   * @param {number} inputCostPer1M - Input cost per 1M tokens
+   * @param {number} outputCostPer1M - Output cost per 1M tokens
+   * @returns {number|null} - Value score or null if not calculable
+   */
+  function calculateEloPerDollar(arenaScore, inputCostPer1M, outputCostPer1M) {
+    if (!arenaScore || arenaScore <= ELO_BASELINE) return null; // Need Elo > baseline for positive score
+    const blendedPrice = (inputCostPer1M + outputCostPer1M) / 2;
+    // Formula: (Elo - baseline) / log(1 + Price)
+    const score = (arenaScore - ELO_BASELINE) / Math.log(1 + blendedPrice);
+    return score;
+  }
+
+  /**
+   * Get gem rating (1-5 gems) based on Value Score
+   * Thresholds calibrated for the logarithmic formula output range
+   * @param {number} valueScore - The calculated value score
+   * @returns {string} - Gem emoji string (1-5 gems)
+   */
+  function getGemRating(valueScore) {
+    if (valueScore === null) return '';
+
+    // Thresholds calibrated for logarithmic formula
+    // Example: Flash ($3.50) ≈ 270, Opus ($30.00) ≈ 150
+    // Higher score = better value
+    if (valueScore >= 250) return '💎💎💎💎💎'; // Exceptional value (5 gems)
+    if (valueScore >= 180) return '💎💎💎💎';   // Great value (4 gems)
+    if (valueScore >= 120) return '💎💎💎';     // Good value (3 gems)
+    if (valueScore >= 80) return '💎💎';        // Fair value (2 gems)
+    if (valueScore >= 40) return '💎';          // Low value (1 gem)
+    return '';                                  // Poor value (no gems)
+  }
+
   async function loadPreferences() {
     try {
-      const result = await chrome.storage.sync.get([CONFIG.TOKEN_UNIT_KEY, CONFIG.PROVIDER_KEY]);
+      const result = await chrome.storage.sync.get([CONFIG.TOKEN_UNIT_KEY, CONFIG.PROVIDER_KEY, CONFIG.COLUMN_VISIBILITY_KEY]);
       currentTokenUnit = result[CONFIG.TOKEN_UNIT_KEY] || CONFIG.DEFAULT_TOKEN_UNIT;
       currentProvider = result[CONFIG.PROVIDER_KEY] || CONFIG.DEFAULT_PROVIDER;
+      currentColumnVisibility = result[CONFIG.COLUMN_VISIBILITY_KEY] || { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
     } catch (error) {
       console.warn('[LMArena Plus] Failed to load preferences:', error);
       currentTokenUnit = CONFIG.DEFAULT_TOKEN_UNIT;
       currentProvider = CONFIG.DEFAULT_PROVIDER;
+      currentColumnVisibility = { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
     }
+  }
+
+  // ============================================
+  // Column Visibility Helpers
+  // ============================================
+  const COLUMN_NAME_TO_INDEX = {
+    'rank': 0,
+    'model': 1,
+    'arena-score': 2,
+    '95-ci': 3,
+    'votes': 4,
+    'organization': 5,
+    'license': 6
+  };
+
+  function applyColumnVisibility() {
+    // Apply visibility to regular table columns
+    const tables = document.querySelectorAll('table');
+    tables.forEach(table => {
+      // Get header cells to determine column indices
+      const headerRow = table.querySelector('thead tr, tr:first-child');
+      if (!headerRow) return;
+
+      const headers = Array.from(headerRow.querySelectorAll('th, td'));
+
+      // Build index map from actual column headers
+      const indexMap = {};
+      headers.forEach((header, idx) => {
+        // Skip LMArena Plus injected headers
+        if (header.classList.contains('lmarena-price-header') ||
+          header.classList.contains('lmarena-elopd-header')) {
+          return;
+        }
+        const text = header.textContent.toLowerCase().trim();
+        if (text.includes('rank') || text === '#') indexMap['rank'] = idx;
+        else if (text.includes('model')) indexMap['model'] = idx;
+        else if (text.includes('arena score') || text === 'score') indexMap['arena-score'] = idx;
+        else if (text.includes('ci') || text.includes('confidence')) indexMap['95-ci'] = idx;
+        else if (text.includes('vote')) indexMap['votes'] = idx;
+        else if (text.includes('organization') || text.includes('org')) indexMap['organization'] = idx;
+        else if (text.includes('license')) indexMap['license'] = idx;
+      });
+
+      // Apply visibility to all rows
+      const allRows = table.querySelectorAll('tr');
+      allRows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+
+        // Regular columns
+        for (const [columnId, colIdx] of Object.entries(indexMap)) {
+          if (cells[colIdx]) {
+            cells[colIdx].style.display = currentColumnVisibility[columnId] ? '' : 'none';
+          }
+        }
+      });
+    });
+
+    // Apply visibility to LMArena Plus columns
+    const pricingHeaders = document.querySelectorAll('.lmarena-price-header');
+    const pricingCells = document.querySelectorAll('.lmarena-price-cell');
+    const elopdHeaders = document.querySelectorAll('.lmarena-elopd-header');
+    const elopdCells = document.querySelectorAll('.lmarena-elopd-cell');
+
+    const pricingVisible = currentColumnVisibility['pricing'];
+    const elopdVisible = currentColumnVisibility['elo-per-dollar'];
+
+    pricingHeaders.forEach(el => el.style.display = pricingVisible ? '' : 'none');
+    pricingCells.forEach(el => el.style.display = pricingVisible ? '' : 'none');
+    elopdHeaders.forEach(el => el.style.display = elopdVisible ? '' : 'none');
+    elopdCells.forEach(el => el.style.display = elopdVisible ? '' : 'none');
+
+    console.log('[LMArena Plus] Column visibility updated');
   }
 
   // ============================================
@@ -579,6 +713,7 @@
       this.loadingManager = loadingManager;
       this.processedTables = new WeakSet();
       this.injectedCells = [];
+      this.injectedEloPerDollarCells = [];
     }
 
     injectIntoTable(table, showLoading = false) {
@@ -588,16 +723,19 @@
       const modelColumnIndex = this._findModelColumnIndex(headerRow);
       if (modelColumnIndex === -1) return;
 
+      const arenaScoreColumnIndex = this._findArenaScoreColumnIndex(headerRow);
+
       if (!table.hasAttribute(CONFIG.COLUMN_MARKER)) {
         table.setAttribute(CONFIG.COLUMN_MARKER, 'true');
         this.processedTables.add(table);
         this._injectHeader(headerRow, showLoading);
+        this._injectEloPerDollarHeader(headerRow, showLoading);
       }
 
-      this._processUnprocessedRows(table, modelColumnIndex, showLoading);
+      this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
     }
 
-    _processUnprocessedRows(table, modelColumnIndex, showLoading) {
+    _processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
       const rows = table.querySelectorAll('tbody tr, tr');
 
       rows.forEach(row => {
@@ -606,6 +744,7 @@
 
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
+        this._injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
       });
     }
 
@@ -619,12 +758,24 @@
         this._updateCellContent(cell, modelName);
       }
 
+      // Update Elo per Dollar cells
+      for (const cellData of this.injectedEloPerDollarCells) {
+        const { cell, modelName, arenaScore } = cellData;
+
+        if (!cell.isConnected) continue;
+
+        cell.classList.remove('lmarena-elopd-cell--loading');
+        this._updateEloPerDollarCellContent(cell, modelName, arenaScore);
+      }
+
       this.loadingManager.setHeaderLoading(false);
     }
 
     setAllCellsLoading() {
       const cells = this.injectedCells.filter(c => c.cell.isConnected).map(c => c.cell);
+      const elopdCells = this.injectedEloPerDollarCells.filter(c => c.cell.isConnected).map(c => c.cell);
       this.loadingManager.setLoading(cells, true);
+      this.loadingManager.setLoading(elopdCells, true);
       this.loadingManager.setHeaderLoading(true);
     }
 
@@ -635,10 +786,11 @@
       document.querySelectorAll(`[${CONFIG.ROW_MARKER}]`).forEach(el => {
         el.removeAttribute(CONFIG.ROW_MARKER);
       });
-      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell').forEach(el => {
+      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell').forEach(el => {
         el.remove();
       });
       this.injectedCells = [];
+      this.injectedEloPerDollarCells = [];
       this.processedTables = new WeakSet();
     }
 
@@ -665,6 +817,21 @@
       return cells.length > 0 ? 0 : -1;
     }
 
+    _findArenaScoreColumnIndex(headerRow) {
+      const cells = headerRow.querySelectorAll('th, td');
+
+      for (let i = 0; i < cells.length; i++) {
+        const text = cells[i].textContent.toLowerCase().trim();
+        // Look for Arena Score, Elo, or Score columns
+        if (text === 'arena score' || text === 'elo' || text === 'score' ||
+          text.includes('arena') || text.includes('elo')) {
+          return i;
+        }
+      }
+
+      return -1;
+    }
+
     _injectHeader(headerRow, showLoading) {
       if (headerRow.querySelector('.lmarena-price-header')) return;
 
@@ -675,6 +842,21 @@
       // Add icon and text
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
       th.innerHTML = `Pricing <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+
+      th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+      headerRow.appendChild(th);
+    }
+
+    _injectEloPerDollarHeader(headerRow, showLoading) {
+      if (headerRow.querySelector('.lmarena-elopd-header')) return;
+
+      const th = document.createElement('th');
+      th.className = 'lmarena-elopd-header';
+      if (showLoading) th.classList.add('lmarena-elopd-header--loading');
+
+      // Add icon and text with gem emoji
+      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      th.innerHTML = `Elo/$ <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
 
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
@@ -700,6 +882,38 @@
         td.classList.add('lmarena-price-cell--loading');
       } else {
         this._updateCellContent(td, modelName);
+      }
+
+      row.appendChild(td);
+    }
+
+    _injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
+      if (row.querySelector('.lmarena-elopd-cell')) return;
+
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 0) return;
+
+      const modelCell = cells[modelColumnIndex] || cells[0];
+      const modelName = this._extractModelName(modelCell);
+
+      // Extract Arena Score from the table
+      let arenaScore = null;
+      if (arenaScoreColumnIndex !== -1 && cells[arenaScoreColumnIndex]) {
+        const scoreText = cells[arenaScoreColumnIndex].textContent.trim();
+        arenaScore = parseFloat(scoreText.replace(/[^0-9.-]/g, ''));
+      }
+
+      const td = document.createElement('td');
+      td.className = 'lmarena-elopd-cell';
+      td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+
+      this.injectedEloPerDollarCells.push({ cell: td, modelName, arenaScore });
+
+      if (showLoading) {
+        td.textContent = 'Loading';
+        td.classList.add('lmarena-elopd-cell--loading');
+      } else {
+        this._updateEloPerDollarCellContent(td, modelName, arenaScore);
       }
 
       row.appendChild(td);
@@ -736,6 +950,38 @@
         cell.textContent = 'N/A';
         cell.classList.add('lmarena-price-cell--na');
         cell._pricingData = null;
+      }
+    }
+
+    _updateEloPerDollarCellContent(cell, modelName, arenaScore) {
+      const pricing = this.pricingService.getPricing(modelName);
+
+      if (pricing && arenaScore && arenaScore > 1000) {
+        const inputCost = pricing.input_cost_per_1m || 0;
+        const outputCost = pricing.output_cost_per_1m || 0;
+        const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost);
+        const gemRating = getGemRating(valueScore);
+
+        if (valueScore !== null) {
+          // Format: show score with 1 decimal for cleaner display
+          const formattedValue = valueScore.toFixed(1);
+          cell.innerHTML = `<span class="lmarena-elopd-value">${formattedValue}</span>`;
+          cell.classList.remove('lmarena-elopd-cell--na');
+        } else {
+          cell.textContent = 'N/A';
+          cell.classList.add('lmarena-elopd-cell--na');
+        }
+
+        // Store data for tooltip
+        cell._eloPerDollarData = { arenaScore, pricing, valueScore };
+      } else if (!arenaScore || arenaScore <= 1000) {
+        cell.textContent = '—';
+        cell.classList.add('lmarena-elopd-cell--na');
+        cell._eloPerDollarData = null;
+      } else {
+        cell.textContent = 'N/A';
+        cell.classList.add('lmarena-elopd-cell--na');
+        cell._eloPerDollarData = null;
       }
     }
 
@@ -817,6 +1063,10 @@
           this.columnInjector.injectIntoTable(table, showLoading);
         }
       });
+      // Apply column visibility to new rows
+      if (!showLoading) {
+        applyColumnVisibility();
+      }
     }
 
     reprocessAll(showLoading = false) {
@@ -863,6 +1113,9 @@
     // Update cells with actual data
     columnInjector.updateAllCells();
 
+    // Apply column visibility preferences
+    applyColumnVisibility();
+
     // Start observing for new tables and rows
     tableObserver.start();
     console.log('[LMArena Plus] Ready');
@@ -880,8 +1133,13 @@
         columnInjector.setAllCellsLoading();
         await pricingService.switchProvider(currentProvider);
         columnInjector.updateAllCells();
+        applyColumnVisibility();
 
         console.log('[LMArena Plus] Provider switched successfully');
+      } else if (message.type === 'COLUMN_VISIBILITY_CHANGED') {
+        currentColumnVisibility = message.value;
+        applyColumnVisibility();
+        console.log('[LMArena Plus] Column visibility updated:', currentColumnVisibility);
       }
     });
   }

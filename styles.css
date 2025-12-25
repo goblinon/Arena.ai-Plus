@@ -146,7 +146,85 @@ table td.lmarena-price-cell {
 }
 
 /* Loading header indicator */
-.lmarena-price-header--loading::after {
+.lmarena-price-header--loading::after,
+.lmarena-elopd-header--loading::after {
   content: ' ⏳';
   font-size: 12px;
+}
+
+/* ============================================ */
+/* Elo per Dollar Column Styles */
+/* ============================================ */
+
+/* Elo/$ column header */
+.lmarena-elopd-header {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: inherit;
+  color: inherit;
+  white-space: nowrap;
+  text-align: left;
+  padding: 14px 24px;
+}
+
+/* Elo/$ cell */
+.lmarena-elopd-cell {
+  font-family: inherit;
+  font-size: 14px;
+  color: inherit;
+  text-align: right;
+  padding: 14px 24px;
+  white-space: nowrap;
+  position: relative;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.lmarena-elopd-cell:hover {
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* N/A state */
+.lmarena-elopd-cell--na {
+  color: #888;
+  font-style: italic;
+}
+
+/* Value display */
+.lmarena-elopd-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* Gem rating display */
+.lmarena-elopd-gems {
+  margin-left: 6px;
+  font-size: 12px;
+  letter-spacing: -2px;
+}
+
+/* Ensure Elo/$ column doesn't break table layout */
+table th.lmarena-elopd-header,
+table td.lmarena-elopd-cell {
+  min-width: 120px;
+  max-width: 180px;
+}
+
+/* Loading state for Elo/$ */
+.lmarena-elopd-cell--loading {
+  color: #666;
+}
+
+.lmarena-elopd-cell--loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 2px solid #3a3a5e;
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: lmarena-spin 0.8s linear infinite;
+  vertical-align: middle;
 }
