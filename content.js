@@ -42,7 +42,8 @@
       'organization': true,
       'license': true,
       'pricing': true,
-      'elo-per-dollar': true
+      'elo-per-dollar': true,
+      'context-window': true
     }
   };
 
@@ -188,14 +189,19 @@
     const pricingCells = document.querySelectorAll('.lmarena-price-cell');
     const elopdHeaders = document.querySelectorAll('.lmarena-elopd-header');
     const elopdCells = document.querySelectorAll('.lmarena-elopd-cell');
+    const ctxHeaders = document.querySelectorAll('.lmarena-ctx-header');
+    const ctxCells = document.querySelectorAll('.lmarena-ctx-cell');
 
     const pricingVisible = currentColumnVisibility['pricing'];
     const elopdVisible = currentColumnVisibility['elo-per-dollar'];
+    const ctxVisible = currentColumnVisibility['context-window'];
 
     pricingHeaders.forEach(el => el.style.display = pricingVisible ? '' : 'none');
     pricingCells.forEach(el => el.style.display = pricingVisible ? '' : 'none');
     elopdHeaders.forEach(el => el.style.display = elopdVisible ? '' : 'none');
     elopdCells.forEach(el => el.style.display = elopdVisible ? '' : 'none');
+    ctxHeaders.forEach(el => el.style.display = ctxVisible ? '' : 'none');
+    ctxCells.forEach(el => el.style.display = ctxVisible ? '' : 'none');
 
     console.log('[LMArena Plus] Column visibility updated');
   }
@@ -204,27 +210,168 @@
   // Loading State Manager
   // ============================================
   class LoadingManager {
-    setLoading(cells, loading) {
+    setLoading(cells, loading, cellType = 'price') {
+      const classMap = {
+        'price': 'lmarena-price-cell--loading',
+        'elopd': 'lmarena-elopd-cell--loading',
+        'ctx': 'lmarena-ctx-cell--loading'
+      };
+      const loadingClass = classMap[cellType] || classMap['price'];
+
       cells.forEach(cell => {
         if (loading) {
           cell.textContent = 'Loading';
-          cell.classList.add('lmarena-price-cell--loading');
-          cell.classList.remove('lmarena-price-cell--na');
+          cell.classList.add(loadingClass);
+          cell.classList.remove('lmarena-price-cell--na', 'lmarena-elopd-cell--na', 'lmarena-ctx-cell--na');
         } else {
-          cell.classList.remove('lmarena-price-cell--loading');
+          cell.classList.remove(loadingClass);
         }
       });
     }
+  }
 
-    setHeaderLoading(loading) {
-      const headers = document.querySelectorAll('.lmarena-price-header');
-      headers.forEach(header => {
-        if (loading) {
-          header.classList.add('lmarena-price-header--loading');
-        } else {
-          header.classList.remove('lmarena-price-header--loading');
+  // ============================================
+  // Context Service (Always from OpenRouter)
+  // ============================================
+  class ContextService {
+    constructor() {
+      this.contextMap = new Map();
+      this.isLoading = false;
+    }
+
+    async initialize() {
+      this.isLoading = true;
+      console.log('[LMArena Plus] Fetching context data from OpenRouter...');
+      await this._fetchContextData();
+      this.isLoading = false;
+    }
+
+    async _fetchContextData() {
+      try {
+        const response = await fetch(CONFIG.PROVIDERS.openrouter.url, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        this._buildContextMap(data);
+        console.log(`[LMArena Plus] Loaded context data for ${this.contextMap.size} models from OpenRouter`);
+      } catch (error) {
+        console.error('[LMArena Plus] Failed to fetch context data from OpenRouter:', error);
+      }
+    }
+
+    _buildContextMap(data) {
+      const models = data.data || [];
+
+      for (const model of models) {
+        if (!model.id || !model.context_length) continue;
+
+        const key = this._normalizeModelName(model.id);
+        const contextData = {
+          context_length: model.context_length,
+          sourceModelName: model.id
+        };
+
+        if (!this.contextMap.has(key)) {
+          this.contextMap.set(key, contextData);
         }
-      });
+
+        const shortKey = key.split('/').pop();
+        if (shortKey && shortKey !== key && !this.contextMap.has(shortKey)) {
+          this.contextMap.set(shortKey, contextData);
+        }
+      }
+    }
+
+    _normalizeModelName(name) {
+      if (!name) return '';
+      return name
+        .toLowerCase()
+        .replace(/%3a/gi, ':')
+        .replace(/(^|[^0-9])(\d)[-_](\d)(?![0-9])/g, '$1$2.$3')
+        .replace(/\s+/g, '-')
+        .trim();
+    }
+
+    getContext(modelName) {
+      const normalized = this._normalizeModelName(modelName);
+
+      // 1. Exact match
+      if (this.contextMap.has(normalized)) {
+        return this.contextMap.get(normalized);
+      }
+
+      // 2. Try without common suffixes
+      const withoutSuffix = normalized
+        .replace(/[.-](preview|beta|latest|v\d+)(\b|$)/gi, '')
+        .replace(/[.-]\d{8}(\b|$)/g, '');
+
+      if (withoutSuffix !== normalized && this.contextMap.has(withoutSuffix)) {
+        return this.contextMap.get(withoutSuffix);
+      }
+
+      // 3. Try without date patterns
+      const withoutDates = normalized
+        .replace(/[.-]20\d{6}(?=[.-]|$)/g, '')
+        .replace(/--+/g, '-')
+        .replace(/[.-]$/, '')
+        .trim();
+
+      if (withoutDates !== normalized && withoutDates.length > 0) {
+        if (this.contextMap.has(withoutDates)) {
+          return this.contextMap.get(withoutDates);
+        }
+      }
+
+      // 4. Try without thinking variants
+      const withoutThinking = normalized
+        .replace(/\(thinking[^)]*\)/g, '')
+        .replace(/[.-]thinking(-[a-z0-9]+)*$/i, '')
+        .replace(/[.-]thinking$/i, '')
+        .replace(/--+/g, '-')
+        .replace(/[.-]$/, '')
+        .trim();
+
+      if (withoutThinking !== normalized && withoutThinking.length > 0) {
+        if (this.contextMap.has(withoutThinking)) {
+          return this.contextMap.get(withoutThinking);
+        }
+      }
+
+      // 5. Prefix matching - search term starts with key
+      let bestMatch = null;
+      let bestMatchLength = 0;
+
+      for (const [key, entry] of this.contextMap) {
+        if (normalized.startsWith(key)) {
+          const charAfterKey = normalized[key.length];
+          if (charAfterKey === undefined || charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/') {
+            if (key.length > bestMatchLength) {
+              bestMatch = entry;
+              bestMatchLength = key.length;
+            }
+          }
+        }
+      }
+
+      if (bestMatch) return bestMatch;
+
+      // 6. Suffix matching - key starts with search term
+      let shortestMatch = null;
+      let shortestMatchLength = Infinity;
+
+      for (const [key, entry] of this.contextMap) {
+        if (key.startsWith(normalized)) {
+          const charAfterNormalized = key[normalized.length];
+          if (charAfterNormalized === '-' || charAfterNormalized === '.' || charAfterNormalized === '/') {
+            if (key.length < shortestMatchLength) {
+              shortestMatch = entry;
+              shortestMatchLength = key.length;
+            }
+          }
+        }
+      }
+
+      return shortestMatch;
     }
   }
 
@@ -322,7 +469,8 @@
           input_cost_per_1m: (modelData.input_cost_per_token || 0) * 1000000,
           output_cost_per_1m: (modelData.output_cost_per_token || 0) * 1000000,
           operator: 'equals',
-          sourceModelName: modelName
+          sourceModelName: modelName,
+          context_length: modelData.max_input_tokens || modelData.max_tokens || null
         };
 
         if (!this.pricingMap.has(key)) {
@@ -350,7 +498,8 @@
           input_cost_per_1m: promptPrice * 1000000,
           output_cost_per_1m: completionPrice * 1000000,
           operator: 'equals',
-          sourceModelName: model.id
+          sourceModelName: model.id,
+          context_length: model.context_length || null
         };
 
         if (!this.pricingMap.has(key)) {
@@ -707,13 +856,15 @@
   // Column Injector
   // ============================================
   class ColumnInjector {
-    constructor(pricingService, tooltipManager, loadingManager) {
+    constructor(pricingService, contextService, tooltipManager, loadingManager) {
       this.pricingService = pricingService;
+      this.contextService = contextService;
       this.tooltipManager = tooltipManager;
       this.loadingManager = loadingManager;
       this.processedTables = new WeakSet();
       this.injectedCells = [];
       this.injectedEloPerDollarCells = [];
+      this.injectedContextWindowCells = [];
     }
 
     injectIntoTable(table, showLoading = false) {
@@ -730,6 +881,7 @@
         this.processedTables.add(table);
         this._injectHeader(headerRow, showLoading);
         this._injectEloPerDollarHeader(headerRow, showLoading);
+        this._injectContextWindowHeader(headerRow, showLoading);
       }
 
       this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
@@ -745,6 +897,7 @@
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
         this._injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+        this._injectContextWindowCell(row, modelColumnIndex, showLoading);
       });
     }
 
@@ -768,15 +921,24 @@
         this._updateEloPerDollarCellContent(cell, modelName, arenaScore);
       }
 
-      this.loadingManager.setHeaderLoading(false);
+      // Update Context Window cells
+      for (const cellData of this.injectedContextWindowCells) {
+        const { cell, modelName } = cellData;
+
+        if (!cell.isConnected) continue;
+
+        cell.classList.remove('lmarena-ctx-cell--loading');
+        this._updateContextWindowCellContent(cell, modelName);
+      }
     }
 
     setAllCellsLoading() {
       const cells = this.injectedCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const elopdCells = this.injectedEloPerDollarCells.filter(c => c.cell.isConnected).map(c => c.cell);
-      this.loadingManager.setLoading(cells, true);
-      this.loadingManager.setLoading(elopdCells, true);
-      this.loadingManager.setHeaderLoading(true);
+      const ctxCells = this.injectedContextWindowCells.filter(c => c.cell.isConnected).map(c => c.cell);
+      this.loadingManager.setLoading(cells, true, 'price');
+      this.loadingManager.setLoading(elopdCells, true, 'elopd');
+      this.loadingManager.setLoading(ctxCells, true, 'ctx');
     }
 
     clearAllInjections() {
@@ -786,11 +948,12 @@
       document.querySelectorAll(`[${CONFIG.ROW_MARKER}]`).forEach(el => {
         el.removeAttribute(CONFIG.ROW_MARKER);
       });
-      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell').forEach(el => {
+      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell, .lmarena-ctx-header, .lmarena-ctx-cell').forEach(el => {
         el.remove();
       });
       this.injectedCells = [];
       this.injectedEloPerDollarCells = [];
+      this.injectedContextWindowCells = [];
       this.processedTables = new WeakSet();
     }
 
@@ -837,7 +1000,6 @@
 
       const th = document.createElement('th');
       th.className = 'lmarena-price-header';
-      if (showLoading) th.classList.add('lmarena-price-header--loading');
 
       // Add icon and text
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
@@ -852,9 +1014,8 @@
 
       const th = document.createElement('th');
       th.className = 'lmarena-elopd-header';
-      if (showLoading) th.classList.add('lmarena-elopd-header--loading');
 
-      // Add icon and text with gem emoji
+      // Add icon and text
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
       th.innerHTML = `Elo/$ <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
 
@@ -919,6 +1080,69 @@
       row.appendChild(td);
     }
 
+    _injectContextWindowHeader(headerRow, showLoading) {
+      if (headerRow.querySelector('.lmarena-ctx-header')) return;
+
+      const th = document.createElement('th');
+      th.className = 'lmarena-ctx-header';
+
+      // Add icon and text
+      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      th.innerHTML = `Context Size <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+
+      th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+      headerRow.appendChild(th);
+    }
+
+    _injectContextWindowCell(row, modelColumnIndex, showLoading) {
+      if (row.querySelector('.lmarena-ctx-cell')) return;
+
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 0) return;
+
+      const modelCell = cells[modelColumnIndex] || cells[0];
+      const modelName = this._extractModelName(modelCell);
+
+      const td = document.createElement('td');
+      td.className = 'lmarena-ctx-cell';
+      td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+
+      this.injectedContextWindowCells.push({ cell: td, modelName });
+
+      if (showLoading) {
+        td.textContent = 'Loading';
+        td.classList.add('lmarena-ctx-cell--loading');
+      } else {
+        this._updateContextWindowCellContent(td, modelName);
+      }
+
+      row.appendChild(td);
+    }
+
+    _updateContextWindowCellContent(cell, modelName) {
+      // Context window always uses OpenRouter data via contextService
+      const contextData = this.contextService.getContext(modelName);
+
+      if (contextData && contextData.context_length) {
+        const formatted = this._formatContextWindow(contextData.context_length);
+        cell.innerHTML = `<span class="lmarena-ctx-value">${formatted}</span>`;
+        cell.classList.remove('lmarena-ctx-cell--na');
+      } else {
+        cell.textContent = 'N/A';
+        cell.classList.add('lmarena-ctx-cell--na');
+      }
+    }
+
+    _formatContextWindow(tokens) {
+      if (!tokens || tokens <= 0) return 'N/A';
+      if (tokens >= 1000000) {
+        return `${(tokens / 1000000).toFixed(tokens % 1000000 === 0 ? 0 : 1)}M`;
+      } else if (tokens >= 1000) {
+        return `${(tokens / 1000).toFixed(tokens % 1000 === 0 ? 0 : 1)}K`;
+      }
+      return tokens.toString();
+    }
+
     _updateCellContent(cell, modelName) {
       const pricing = this.pricingService.getPricing(modelName);
       const unitLabel = getTokenUnitLabel(currentTokenUnit);
@@ -931,7 +1155,12 @@
         const inputCost = convertCostToUnit(pricing.input_cost_per_1m || 0, currentTokenUnit);
         const outputCost = convertCostToUnit(pricing.output_cost_per_1m || 0, currentTokenUnit);
         const totalCost = inputCost + outputCost;
-        cell.textContent = `$${this._formatCost(totalCost)} / ${unitLabel}`;
+
+        // New layout: bold total on top, input/output side by side below
+        cell.innerHTML = `
+          <div class="lmarena-price-total">$${this._formatCost(totalCost)}</div>
+          <div class="lmarena-price-breakdown">$${this._formatCost(inputCost)} / $${this._formatCost(outputCost)}</div>
+        `;
         cell.classList.remove('lmarena-price-cell--na');
 
         // Store pricing reference on the element for reliable access
@@ -1090,7 +1319,7 @@
   // ============================================
   // Main Initialization
   // ============================================
-  let pricingService, tooltipManager, loadingManager, columnInjector, tableObserver;
+  let pricingService, contextService, tooltipManager, loadingManager, columnInjector, tableObserver;
 
   async function init() {
     console.log('[LMArena Plus] Initializing...');
@@ -1098,17 +1327,22 @@
     await loadPreferences();
 
     pricingService = new PricingService();
+    contextService = new ContextService();
     tooltipManager = new TooltipManager();
     loadingManager = new LoadingManager();
-    columnInjector = new ColumnInjector(pricingService, tooltipManager, loadingManager);
+    columnInjector = new ColumnInjector(pricingService, contextService, tooltipManager, loadingManager);
     tableObserver = new TableObserver(columnInjector);
 
     // Show loading state immediately
     tableObserver.reprocessAll(true);
 
-    // Fetch pricing data (always fresh)
-    await pricingService.initialize(currentProvider);
-    console.log(`[LMArena Plus] Data loaded from ${currentProvider}`);
+    // Fetch pricing and context data in parallel
+    // Context always from OpenRouter, pricing from selected provider
+    await Promise.all([
+      pricingService.initialize(currentProvider),
+      contextService.initialize()
+    ]);
+    console.log(`[LMArena Plus] Pricing loaded from ${currentProvider}, context always from OpenRouter`);
 
     // Update cells with actual data
     columnInjector.updateAllCells();

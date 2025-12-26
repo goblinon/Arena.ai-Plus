@@ -40,6 +40,26 @@
   background-color: rgba(74, 222, 128, 0.05);
 }
 
+/* Pricing cell layout - stacked display */
+.lmarena-price-total,
+.lmarena-price-breakdown {
+  pointer-events: none;
+}
+
+.lmarena-price-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.lmarena-price-breakdown {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
 /* N/A state */
 .lmarena-price-cell--na {
   color: #888;
@@ -145,13 +165,6 @@ table td.lmarena-price-cell {
   }
 }
 
-/* Loading header indicator */
-.lmarena-price-header--loading::after,
-.lmarena-elopd-header--loading::after {
-  content: ' ⏳';
-  font-size: 12px;
-}
-
 /* ============================================ */
 /* Elo per Dollar Column Styles */
 /* ============================================ */
@@ -224,6 +237,76 @@ table td.lmarena-elopd-cell {
   margin-left: 6px;
   border: 2px solid #3a3a5e;
   border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: lmarena-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+/* ============================================ */
+/* Context Window Column Styles */
+/* ============================================ */
+
+/* Context column header */
+.lmarena-ctx-header {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: inherit;
+  color: inherit;
+  white-space: nowrap;
+  text-align: left;
+  padding: 14px 24px;
+}
+
+/* Context cell */
+.lmarena-ctx-cell {
+  font-family: inherit;
+  font-size: 14px;
+  color: inherit;
+  text-align: right;
+  padding: 14px 24px;
+  white-space: nowrap;
+  position: relative;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.lmarena-ctx-cell:hover {
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* N/A state */
+.lmarena-ctx-cell--na {
+  color: #888;
+  font-style: italic;
+}
+
+/* Value display */
+.lmarena-ctx-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+/* Ensure Context column doesn't break table layout */
+table th.lmarena-ctx-header,
+table td.lmarena-ctx-cell {
+  min-width: 80px;
+  max-width: 120px;
+}
+
+/* Loading state for Context */
+.lmarena-ctx-cell--loading {
+  color: #666;
+}
+
+.lmarena-ctx-cell--loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 2px solid #3a3a5e;
+  border-top-color: #60a5fa;
   border-radius: 50%;
   animation: lmarena-spin 0.8s linear infinite;
   vertical-align: middle;
