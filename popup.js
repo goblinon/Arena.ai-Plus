@@ -22,7 +22,9 @@
         'organization': true,
         'license': true,
         'pricing': true,
-        'elo-per-dollar': true
+        'elo-per-dollar': true,
+        'context-window': true,
+        'modalities': true
     };
 
     const PROVIDER_URLS = {

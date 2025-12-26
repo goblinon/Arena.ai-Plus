@@ -43,7 +43,8 @@
       'license': true,
       'pricing': true,
       'elo-per-dollar': true,
-      'context-window': true
+      'context-window': true,
+      'modalities': true
     }
   };
 
@@ -71,7 +72,7 @@
   // ============================================
   // Elo per Dollar Helpers (Logarithmic Formula)
   // ============================================
-  const ELO_BASELINE = 1350;
+  const ELO_BASELINE = 1150;
 
   /**
    * Calculate Value Score using logarithmic price compression
@@ -191,10 +192,13 @@
     const elopdCells = document.querySelectorAll('.lmarena-elopd-cell');
     const ctxHeaders = document.querySelectorAll('.lmarena-ctx-header');
     const ctxCells = document.querySelectorAll('.lmarena-ctx-cell');
+    const modHeaders = document.querySelectorAll('.lmarena-mod-header');
+    const modCells = document.querySelectorAll('.lmarena-mod-cell');
 
     const pricingVisible = currentColumnVisibility['pricing'];
     const elopdVisible = currentColumnVisibility['elo-per-dollar'];
     const ctxVisible = currentColumnVisibility['context-window'];
+    const modVisible = currentColumnVisibility['modalities'];
 
     pricingHeaders.forEach(el => el.style.display = pricingVisible ? '' : 'none');
     pricingCells.forEach(el => el.style.display = pricingVisible ? '' : 'none');
@@ -202,6 +206,8 @@
     elopdCells.forEach(el => el.style.display = elopdVisible ? '' : 'none');
     ctxHeaders.forEach(el => el.style.display = ctxVisible ? '' : 'none');
     ctxCells.forEach(el => el.style.display = ctxVisible ? '' : 'none');
+    modHeaders.forEach(el => el.style.display = modVisible ? '' : 'none');
+    modCells.forEach(el => el.style.display = modVisible ? '' : 'none');
 
     console.log('[LMArena Plus] Column visibility updated');
   }
@@ -214,7 +220,8 @@
       const classMap = {
         'price': 'lmarena-price-cell--loading',
         'elopd': 'lmarena-elopd-cell--loading',
-        'ctx': 'lmarena-ctx-cell--loading'
+        'ctx': 'lmarena-ctx-cell--loading',
+        'mod': 'lmarena-mod-cell--loading'
       };
       const loadingClass = classMap[cellType] || classMap['price'];
 
@@ -222,7 +229,7 @@
         if (loading) {
           cell.textContent = 'Loading';
           cell.classList.add(loadingClass);
-          cell.classList.remove('lmarena-price-cell--na', 'lmarena-elopd-cell--na', 'lmarena-ctx-cell--na');
+          cell.classList.remove('lmarena-price-cell--na', 'lmarena-elopd-cell--na', 'lmarena-ctx-cell--na', 'lmarena-mod-cell--na');
         } else {
           cell.classList.remove(loadingClass);
         }
@@ -263,11 +270,13 @@
       const models = data.data || [];
 
       for (const model of models) {
-        if (!model.id || !model.context_length) continue;
+        if (!model.id) continue;
 
         const key = this._normalizeModelName(model.id);
         const contextData = {
-          context_length: model.context_length,
+          context_length: model.context_length || null,
+          input_modalities: model.architecture?.input_modalities || ['text'],
+          output_modalities: model.architecture?.output_modalities || ['text'],
           sourceModelName: model.id
         };
 
@@ -824,6 +833,64 @@
       }, CONFIG.TOOLTIP_HIDE_DELAY);
     }
 
+    showModalities(element, modData) {
+      // Cancel any pending hide
+      clearTimeout(this.hideTimeout);
+
+      // If showing for a different element, show immediately
+      const isNewElement = this.currentElement !== element;
+      if (isNewElement) {
+        clearTimeout(this.showTimeout);
+      }
+
+      this.currentElement = element;
+
+      const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
+
+      this.showTimeout = setTimeout(() => {
+        const inputMods = modData.input_modalities || ['text'];
+        const outputMods = modData.output_modalities || ['text'];
+
+        const formatModality = (key) => {
+          const names = { text: 'Text', image: 'Image', audio: 'Audio', video: 'Video', file: 'File' };
+          return names[key] || key;
+        };
+
+        const formatRow = (mods) => {
+          const supported = mods.map(key => formatModality(key));
+          return supported.length > 0 ? supported.join(', ') : 'None';
+        };
+
+        this.tooltip.innerHTML = `
+          <div class="lmarena-price-tooltip__total">
+            Modalities
+          </div>
+          <div class="lmarena-price-tooltip__explanation">
+            Shows which data types this model can process and generate
+          </div>
+          <div class="lmarena-price-tooltip__breakdown">
+            <div class="lmarena-price-tooltip__row">
+              <span class="lmarena-price-tooltip__label">Input:</span>
+              <span class="lmarena-price-tooltip__value">${formatRow(inputMods)}</span>
+            </div>
+            <div class="lmarena-price-tooltip__row">
+              <span class="lmarena-price-tooltip__label">Output:</span>
+              <span class="lmarena-price-tooltip__value">${formatRow(outputMods)}</span>
+            </div>
+          </div>
+          <div class="lmarena-price-tooltip__source">Source: OpenRouter</div>
+        `;
+
+        // Make visible first so we can measure properly
+        this.tooltip.classList.add('lmarena-price-tooltip--visible');
+
+        // Position after content is set and visible
+        requestAnimationFrame(() => {
+          this._positionTooltip(element);
+        });
+      }, showDelay);
+    }
+
     _positionTooltip(element) {
       if (!element || !element.isConnected) return;
 
@@ -865,6 +932,7 @@
       this.injectedCells = [];
       this.injectedEloPerDollarCells = [];
       this.injectedContextWindowCells = [];
+      this.injectedModalitiesCells = [];
     }
 
     injectIntoTable(table, showLoading = false) {
@@ -882,6 +950,7 @@
         this._injectHeader(headerRow, showLoading);
         this._injectEloPerDollarHeader(headerRow, showLoading);
         this._injectContextWindowHeader(headerRow, showLoading);
+        this._injectModalitiesHeader(headerRow, showLoading);
       }
 
       this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
@@ -898,6 +967,7 @@
         this._injectCell(row, modelColumnIndex, showLoading);
         this._injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
         this._injectContextWindowCell(row, modelColumnIndex, showLoading);
+        this._injectModalitiesCell(row, modelColumnIndex, showLoading);
       });
     }
 
@@ -930,15 +1000,27 @@
         cell.classList.remove('lmarena-ctx-cell--loading');
         this._updateContextWindowCellContent(cell, modelName);
       }
+
+      // Update Modalities cells
+      for (const cellData of this.injectedModalitiesCells) {
+        const { cell, modelName } = cellData;
+
+        if (!cell.isConnected) continue;
+
+        cell.classList.remove('lmarena-mod-cell--loading');
+        this._updateModalitiesCellContent(cell, modelName);
+      }
     }
 
     setAllCellsLoading() {
       const cells = this.injectedCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const elopdCells = this.injectedEloPerDollarCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const ctxCells = this.injectedContextWindowCells.filter(c => c.cell.isConnected).map(c => c.cell);
+      const modCells = this.injectedModalitiesCells.filter(c => c.cell.isConnected).map(c => c.cell);
       this.loadingManager.setLoading(cells, true, 'price');
       this.loadingManager.setLoading(elopdCells, true, 'elopd');
       this.loadingManager.setLoading(ctxCells, true, 'ctx');
+      this.loadingManager.setLoading(modCells, true, 'mod');
     }
 
     clearAllInjections() {
@@ -948,12 +1030,13 @@
       document.querySelectorAll(`[${CONFIG.ROW_MARKER}]`).forEach(el => {
         el.removeAttribute(CONFIG.ROW_MARKER);
       });
-      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell, .lmarena-ctx-header, .lmarena-ctx-cell').forEach(el => {
+      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell, .lmarena-ctx-header, .lmarena-ctx-cell, .lmarena-mod-header, .lmarena-mod-cell').forEach(el => {
         el.remove();
       });
       this.injectedCells = [];
       this.injectedEloPerDollarCells = [];
       this.injectedContextWindowCells = [];
+      this.injectedModalitiesCells = [];
       this.processedTables = new WeakSet();
     }
 
@@ -1141,6 +1224,114 @@
         return `${(tokens / 1000).toFixed(tokens % 1000 === 0 ? 0 : 1)}K`;
       }
       return tokens.toString();
+    }
+
+    _injectModalitiesHeader(headerRow, showLoading) {
+      if (headerRow.querySelector('.lmarena-mod-header')) return;
+
+      const th = document.createElement('th');
+      th.className = 'lmarena-mod-header';
+
+      // Add icon and text
+      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      th.innerHTML = `Modalities <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+
+      th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+      headerRow.appendChild(th);
+    }
+
+    _injectModalitiesCell(row, modelColumnIndex, showLoading) {
+      if (row.querySelector('.lmarena-mod-cell')) return;
+
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 0) return;
+
+      const modelCell = cells[modelColumnIndex] || cells[0];
+      const modelName = this._extractModelName(modelCell);
+
+      const td = document.createElement('td');
+      td.className = 'lmarena-mod-cell';
+      td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+
+      this.injectedModalitiesCells.push({ cell: td, modelName });
+
+      if (showLoading) {
+        td.textContent = 'Loading';
+        td.classList.add('lmarena-mod-cell--loading');
+      } else {
+        this._updateModalitiesCellContent(td, modelName);
+      }
+
+      row.appendChild(td);
+    }
+
+    _updateModalitiesCellContent(cell, modelName) {
+      // Modalities always uses OpenRouter data via contextService
+      const contextData = this.contextService.getContext(modelName);
+
+      // Clear any existing event listeners
+      cell.onmouseenter = null;
+      cell.onmouseleave = null;
+
+      if (contextData) {
+        const inputMods = contextData.input_modalities || ['text'];
+        const outputMods = contextData.output_modalities || ['text'];
+        cell.innerHTML = this._renderModalitiesIcons(inputMods, outputMods);
+        cell.classList.remove('lmarena-mod-cell--na');
+
+        // Store modality data for tooltip
+        cell._modalityData = {
+          input_modalities: inputMods,
+          output_modalities: outputMods,
+          sourceModelName: contextData.sourceModelName
+        };
+
+        cell.onmouseenter = (e) => {
+          const modData = e.currentTarget._modalityData;
+          if (modData) {
+            this.tooltipManager.showModalities(e.currentTarget, modData);
+          }
+        };
+        cell.onmouseleave = () => {
+          this.tooltipManager.hide();
+        };
+      } else {
+        cell.textContent = 'N/A';
+        cell.classList.add('lmarena-mod-cell--na');
+        cell._modalityData = null;
+      }
+    }
+
+    _renderModalitiesIcons(inputMods, outputMods) {
+      const modalities = [
+        { key: 'text', svg: 'text.svg', label: 'Text' },
+        { key: 'image', svg: 'image.svg', label: 'Image' },
+        { key: 'audio', svg: 'audio.svg', label: 'Audio' },
+        { key: 'video', svg: 'video.svg', label: 'Video' }
+      ];
+
+      let html = '<div class="lmarena-mod-container">';
+
+      // Input row
+      html += '<div class="lmarena-mod-row" title="Input modalities">';
+      for (const mod of modalities) {
+        const hasInput = inputMods.includes(mod.key);
+        const iconUrl = chrome.runtime.getURL(`icons/${mod.svg}`);
+        html += `<img src="${iconUrl}" class="lmarena-mod-icon ${hasInput ? 'lmarena-mod-enabled' : 'lmarena-mod-disabled'}" alt="${mod.label} input" title="${mod.label} input: ${hasInput ? 'Yes' : 'No'}">`;
+      }
+      html += '</div>';
+
+      // Output row
+      html += '<div class="lmarena-mod-row" title="Output modalities">';
+      for (const mod of modalities) {
+        const hasOutput = outputMods.includes(mod.key);
+        const iconUrl = chrome.runtime.getURL(`icons/${mod.svg}`);
+        html += `<img src="${iconUrl}" class="lmarena-mod-icon ${hasOutput ? 'lmarena-mod-enabled' : 'lmarena-mod-disabled'}" alt="${mod.label} output" title="${mod.label} output: ${hasOutput ? 'Yes' : 'No'}">`;
+      }
+      html += '</div>';
+
+      html += '</div>';
+      return html;
     }
 
     _updateCellContent(cell, modelName) {
