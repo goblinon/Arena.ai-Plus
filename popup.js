@@ -109,10 +109,18 @@
         savePreference(TOKEN_UNIT_KEY, parseInt(e.target.value, 10), 'TOKEN_UNIT_CHANGED');
     });
 
-    dataProviderSelect.addEventListener('change', (e) => {
+    dataProviderSelect.addEventListener('change', async (e) => {
         const provider = e.target.value;
         updateAttribution(provider);
-        savePreference(PROVIDER_KEY, provider, 'PROVIDER_CHANGED');
+
+        // Save preference first
+        await chrome.storage.sync.set({ [PROVIDER_KEY]: provider });
+
+        // Hard reload all LMArena tabs to fetch fresh data from new provider
+        const tabs = await chrome.tabs.query({ url: 'https://lmarena.ai/*' });
+        for (const tab of tabs) {
+            chrome.tabs.reload(tab.id, { bypassCache: true });
+        }
     });
 
     // Column visibility checkboxes
