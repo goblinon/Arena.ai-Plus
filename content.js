@@ -321,9 +321,41 @@
         .trim();
 
       if (withoutThinking !== normalized && withoutThinking.length > 0) {
+        // First try exact match
         if (this.contextMap.has(withoutThinking)) {
           return this.contextMap.get(withoutThinking);
         }
+
+        // Also try prefix/suffix matching on the stripped name
+        // This handles cases like gemini-3-flash matching gemini-3-flash-preview
+        let thinkingBestMatch = null;
+        let thinkingBestMatchLength = 0;
+
+        for (const [key, entry] of this.contextMap) {
+          // Prefix match: withoutThinking starts with key
+          if (withoutThinking.startsWith(key)) {
+            const charAfterKey = withoutThinking[key.length];
+            if (charAfterKey === undefined || charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/') {
+              if (key.length > thinkingBestMatchLength) {
+                thinkingBestMatch = entry;
+                thinkingBestMatchLength = key.length;
+              }
+            }
+          }
+          // Suffix match: key starts with withoutThinking (e.g., gemini-3-flash-preview starts with gemini-3-flash)
+          if (key.startsWith(withoutThinking)) {
+            const charAfterStripped = key[withoutThinking.length];
+            if (charAfterStripped === '-' || charAfterStripped === '.' || charAfterStripped === '/') {
+              // For suffix matches, prefer shorter keys (more specific match)
+              if (!thinkingBestMatch || key.length < thinkingBestMatchLength) {
+                thinkingBestMatch = entry;
+                thinkingBestMatchLength = key.length;
+              }
+            }
+          }
+        }
+
+        if (thinkingBestMatch) return thinkingBestMatch;
       }
 
       // 5. Prefix matching - search term starts with key
