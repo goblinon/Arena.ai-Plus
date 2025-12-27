@@ -218,6 +218,194 @@
   }
 
   // ============================================
+  // Model Matcher Utility (Shared by all services)
+  // ============================================
+  const ModelMatcher = {
+    /**
+     * Normalize a model name for matching.
+     * Handles URL encoding, version separators, and whitespace.
+     */
+    normalizeModelName(name) {
+      if (!name) return '';
+      return name
+        .toLowerCase()
+        .replace(/%3a/gi, ':')
+        // Normalize versions: 4-5 -> 4.5, 3_5 -> 3.5 (only between single digits)
+        .replace(/(^|[^0-9])(\d)[-_](\d)(?![0-9])/g, '$1$2.$3')
+        .replace(/\s+/g, '-')
+        .trim();
+    },
+
+    /**
+     * Check if a character position represents a version number continuation.
+     * This prevents gpt-4 from matching gpt-4.5
+     */
+    _isVersionContinuation(str, pos, key) {
+      const charAfter = str[pos];
+      const charAfterPlus1 = str[pos + 1];
+      return (charAfter === '.' || charAfter === '-') &&
+        charAfterPlus1 >= '0' && charAfterPlus1 <= '9' &&
+        key[key.length - 1] >= '0' && key[key.length - 1] <= '9';
+    },
+
+    /**
+     * Strip common suffixes like -preview, -beta, -latest
+     */
+    _stripSuffixes(normalized) {
+      return normalized
+        .replace(/[.-](preview|beta|latest|v\d+)(\b|$)/gi, '')
+        .replace(/[.-]\d{8}(\b|$)/g, '');
+    },
+
+    /**
+     * Strip date patterns like -20250929
+     */
+    _stripDates(normalized) {
+      return normalized
+        .replace(/[.-]20\d{6}(?=[.-]|$)/g, '')
+        .replace(/--+/g, '-')
+        .replace(/[.-]$/, '')
+        .trim();
+    },
+
+    /**
+     * Strip thinking variants like (thinking-minimal), -thinking-32k
+     */
+    _stripThinking(normalized) {
+      return normalized
+        .replace(/\(thinking[^)]*\)/g, '')
+        .replace(/[.-]thinking(-[a-z0-9]+)*$/i, '')
+        .replace(/[.-]thinking$/i, '')
+        .replace(/--+/g, '-')
+        .replace(/[.-]$/, '')
+        .trim();
+    },
+
+    /**
+     * Core matching logic: find best match in a map using prefix/suffix matching.
+     * @param {Map} map - The map to search in
+     * @param {string} searchTerm - The normalized search term
+     * @param {boolean} checkOperators - Whether to check operator-based matching (for Helicone)
+     * @returns {any} The matched entry or null
+     */
+    _findMatchInMap(map, searchTerm, checkOperators = false) {
+      // 1. Exact match
+      if (map.has(searchTerm)) {
+        return map.get(searchTerm);
+      }
+
+      // 2. Operator-based matching (Helicone data only)
+      if (checkOperators) {
+        let operatorMatch = null;
+        let operatorMatchLength = 0;
+        for (const [key, entry] of map) {
+          if (entry.operator === 'includes' && searchTerm.includes(key)) {
+            if (key.length > operatorMatchLength) {
+              operatorMatch = entry;
+              operatorMatchLength = key.length;
+            }
+          }
+          if (entry.operator === 'startsWith' && searchTerm.startsWith(key)) {
+            if (key.length > operatorMatchLength) {
+              operatorMatch = entry;
+              operatorMatchLength = key.length;
+            }
+          }
+        }
+        if (operatorMatch) return operatorMatch;
+      }
+
+      // 3. Prefix matching - search term starts with key
+      let bestMatch = null;
+      let bestMatchLength = 0;
+
+      for (const [key, entry] of map) {
+        if (searchTerm.startsWith(key)) {
+          const charAfterKey = searchTerm[key.length];
+          if (charAfterKey === undefined ||
+            ((charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/' || charAfterKey === ':') &&
+              !this._isVersionContinuation(searchTerm, key.length, key))) {
+            if (key.length > bestMatchLength) {
+              bestMatch = entry;
+              bestMatchLength = key.length;
+            }
+          }
+        }
+      }
+
+      if (bestMatch) return bestMatch;
+
+      // 4. Suffix matching - key starts with search term
+      let shortestMatch = null;
+      let shortestMatchLength = Infinity;
+
+      for (const [key, entry] of map) {
+        if (key.startsWith(searchTerm)) {
+          const charAfterNormalized = key[searchTerm.length];
+          if (charAfterNormalized === '-' || charAfterNormalized === '.' || charAfterNormalized === '/' || charAfterNormalized === ':') {
+            if (key.length < shortestMatchLength) {
+              shortestMatch = entry;
+              shortestMatchLength = key.length;
+            }
+          }
+        }
+      }
+
+      return shortestMatch;
+    },
+
+    /**
+     * Find the best match for a model name in a map.
+     * Tries multiple normalization strategies in order.
+     * @param {Map} map - The map to search in
+     * @param {string} modelName - The original model name
+     * @param {Object} options - Options: { checkOperators: boolean }
+     * @returns {any} The matched entry or null
+     */
+    findMatch(map, modelName, options = {}) {
+      const checkOperators = options.checkOperators || false;
+      const normalized = this.normalizeModelName(modelName);
+
+      // 1. Direct match with normalized name
+      let result = this._findMatchInMap(map, normalized, checkOperators);
+      if (result) return result;
+
+      // 2. Try without common suffixes
+      const withoutSuffix = this._stripSuffixes(normalized);
+      if (withoutSuffix !== normalized) {
+        result = this._findMatchInMap(map, withoutSuffix, checkOperators);
+        if (result) return result;
+      }
+
+      // 3. Try without date patterns
+      const withoutDates = this._stripDates(normalized);
+      if (withoutDates !== normalized && withoutDates.length > 0) {
+        result = this._findMatchInMap(map, withoutDates, checkOperators);
+        if (result) return result;
+      }
+
+      // 4. Try without thinking variants
+      const withoutThinking = this._stripThinking(normalized);
+      if (withoutThinking !== normalized && withoutThinking.length > 0) {
+        result = this._findMatchInMap(map, withoutThinking, checkOperators);
+        if (result) return result;
+      }
+
+      // 5. Try stripping BOTH dates AND thinking
+      const withoutDatesAndThinking = this._stripThinking(withoutDates);
+      if (withoutDatesAndThinking !== normalized &&
+        withoutDatesAndThinking !== withoutDates &&
+        withoutDatesAndThinking !== withoutThinking &&
+        withoutDatesAndThinking.length > 0) {
+        result = this._findMatchInMap(map, withoutDatesAndThinking, checkOperators);
+        if (result) return result;
+      }
+
+      return null;
+    }
+  };
+
+  // ============================================
   // Context Service (Always from OpenRouter)
   // ============================================
   class ContextService {
@@ -252,11 +440,13 @@
       for (const model of models) {
         if (!model.id) continue;
 
-        const key = this._normalizeModelName(model.id);
+        const key = ModelMatcher.normalizeModelName(model.id);
+        const hasExplicitModalities = !!(model.architecture?.input_modalities || model.architecture?.output_modalities);
         const contextData = {
           context_length: model.context_length || null,
           input_modalities: model.architecture?.input_modalities || ['text'],
           output_modalities: model.architecture?.output_modalities || ['text'],
+          hasExplicitModalities: hasExplicitModalities,
           sourceModelName: model.id
         };
 
@@ -271,128 +461,8 @@
       }
     }
 
-    _normalizeModelName(name) {
-      if (!name) return '';
-      return name
-        .toLowerCase()
-        .replace(/%3a/gi, ':')
-        .replace(/(^|[^0-9])(\d)[-_](\d)(?![0-9])/g, '$1$2.$3')
-        .replace(/\s+/g, '-')
-        .trim();
-    }
-
     getContext(modelName) {
-      const normalized = this._normalizeModelName(modelName);
-
-      // 1. Exact match
-      if (this.contextMap.has(normalized)) {
-        return this.contextMap.get(normalized);
-      }
-
-      // 2. Try without common suffixes
-      const withoutSuffix = normalized
-        .replace(/[.-](preview|beta|latest|v\d+)(\b|$)/gi, '')
-        .replace(/[.-]\d{8}(\b|$)/g, '');
-
-      if (withoutSuffix !== normalized && this.contextMap.has(withoutSuffix)) {
-        return this.contextMap.get(withoutSuffix);
-      }
-
-      // 3. Try without date patterns
-      const withoutDates = normalized
-        .replace(/[.-]20\d{6}(?=[.-]|$)/g, '')
-        .replace(/--+/g, '-')
-        .replace(/[.-]$/, '')
-        .trim();
-
-      if (withoutDates !== normalized && withoutDates.length > 0) {
-        if (this.contextMap.has(withoutDates)) {
-          return this.contextMap.get(withoutDates);
-        }
-      }
-
-      // 4. Try without thinking variants
-      const withoutThinking = normalized
-        .replace(/\(thinking[^)]*\)/g, '')
-        .replace(/[.-]thinking(-[a-z0-9]+)*$/i, '')
-        .replace(/[.-]thinking$/i, '')
-        .replace(/--+/g, '-')
-        .replace(/[.-]$/, '')
-        .trim();
-
-      if (withoutThinking !== normalized && withoutThinking.length > 0) {
-        // First try exact match
-        if (this.contextMap.has(withoutThinking)) {
-          return this.contextMap.get(withoutThinking);
-        }
-
-        // Also try prefix/suffix matching on the stripped name
-        // This handles cases like gemini-3-flash matching gemini-3-flash-preview
-        let thinkingBestMatch = null;
-        let thinkingBestMatchLength = 0;
-
-        for (const [key, entry] of this.contextMap) {
-          // Prefix match: withoutThinking starts with key
-          if (withoutThinking.startsWith(key)) {
-            const charAfterKey = withoutThinking[key.length];
-            if (charAfterKey === undefined || charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/') {
-              if (key.length > thinkingBestMatchLength) {
-                thinkingBestMatch = entry;
-                thinkingBestMatchLength = key.length;
-              }
-            }
-          }
-          // Suffix match: key starts with withoutThinking (e.g., gemini-3-flash-preview starts with gemini-3-flash)
-          if (key.startsWith(withoutThinking)) {
-            const charAfterStripped = key[withoutThinking.length];
-            if (charAfterStripped === '-' || charAfterStripped === '.' || charAfterStripped === '/') {
-              // For suffix matches, prefer shorter keys (more specific match)
-              if (!thinkingBestMatch || key.length < thinkingBestMatchLength) {
-                thinkingBestMatch = entry;
-                thinkingBestMatchLength = key.length;
-              }
-            }
-          }
-        }
-
-        if (thinkingBestMatch) return thinkingBestMatch;
-      }
-
-      // 5. Prefix matching - search term starts with key
-      let bestMatch = null;
-      let bestMatchLength = 0;
-
-      for (const [key, entry] of this.contextMap) {
-        if (normalized.startsWith(key)) {
-          const charAfterKey = normalized[key.length];
-          if (charAfterKey === undefined || charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/') {
-            if (key.length > bestMatchLength) {
-              bestMatch = entry;
-              bestMatchLength = key.length;
-            }
-          }
-        }
-      }
-
-      if (bestMatch) return bestMatch;
-
-      // 6. Suffix matching - key starts with search term
-      let shortestMatch = null;
-      let shortestMatchLength = Infinity;
-
-      for (const [key, entry] of this.contextMap) {
-        if (key.startsWith(normalized)) {
-          const charAfterNormalized = key[normalized.length];
-          if (charAfterNormalized === '-' || charAfterNormalized === '.' || charAfterNormalized === '/') {
-            if (key.length < shortestMatchLength) {
-              shortestMatch = entry;
-              shortestMatchLength = key.length;
-            }
-          }
-        }
-      }
-
-      return shortestMatch;
+      return ModelMatcher.findMatch(this.contextMap, modelName);
     }
   }
 
@@ -461,7 +531,7 @@
       if (!Array.isArray(entries)) return;
 
       for (const entry of entries) {
-        const key = this._normalizeModelName(entry.model);
+        const key = ModelMatcher.normalizeModelName(entry.model);
         const pricing = {
           input_cost_per_1m: entry.input_cost_per_1m || 0,
           output_cost_per_1m: entry.output_cost_per_1m || 0,
@@ -485,7 +555,7 @@
         if (modelName === 'sample_spec') continue;
         if (!modelData.input_cost_per_token && !modelData.output_cost_per_token) continue;
 
-        const key = this._normalizeModelName(modelName);
+        const key = ModelMatcher.normalizeModelName(modelName);
         const pricing = {
           input_cost_per_1m: (modelData.input_cost_per_token || 0) * 1000000,
           output_cost_per_1m: (modelData.output_cost_per_token || 0) * 1000000,
@@ -511,7 +581,7 @@
       for (const model of models) {
         if (!model.id || !model.pricing) continue;
 
-        const key = this._normalizeModelName(model.id);
+        const key = ModelMatcher.normalizeModelName(model.id);
         const promptPrice = parseFloat(model.pricing.prompt) || 0;
         const completionPrice = parseFloat(model.pricing.completion) || 0;
 
@@ -534,238 +604,9 @@
       }
     }
 
-    _normalizeModelName(name) {
-      if (!name) return '';
-      return name
-        .toLowerCase()
-        .replace(/%3a/gi, ':')
-        // Normalize versions: 4-5 -> 4.5, 3_5 -> 3.5 (only between single digits)
-        .replace(/(^|[^0-9])(\d)[-_](\d)(?![0-9])/g, '$1$2.$3')
-        .replace(/\s+/g, '-')
-        .trim();
-    }
-
     getPricing(modelName) {
-      const normalized = this._normalizeModelName(modelName);
-
-      // 1. Exact match
-      if (this.pricingMap.has(normalized)) {
-        return this.pricingMap.get(normalized);
-      }
-
-      // 2. Try without common suffixes (search term may have -preview, -beta, etc.)
-      //    Handles both - and . separators for metadata
-      const withoutSuffix = normalized
-        .replace(/[.-](preview|beta|latest|v\d+)(\b|$)/gi, '')
-        .replace(/[.-]\d{8}(\b|$)/g, '');
-
-      if (withoutSuffix !== normalized && this.pricingMap.has(withoutSuffix)) {
-        return this.pricingMap.get(withoutSuffix);
-      }
-
-      // 3. Try without date patterns (YYYYMMDD like 20250929)
-      //    Dates can appear anywhere in the name, e.g., claude-sonnet-4-5-20250929-thinking-32k
-      const withoutDates = normalized
-        .replace(/[.-]20\d{6}(?=[.-]|$)/g, '')  // Remove -20250929 or .20250929
-        .replace(/--+/g, '-')  // Clean up double dashes
-        .replace(/[.-]$/, '')  // Remove trailing dash or dot
-        .trim();
-
-      if (withoutDates !== normalized && withoutDates.length > 0) {
-        if (this.pricingMap.has(withoutDates)) {
-          return this.pricingMap.get(withoutDates);
-        }
-        // Try further matching on the date-stripped version
-        const dateStrippedMatch = this._findMatch(withoutDates);
-        if (dateStrippedMatch) {
-          return dateStrippedMatch;
-        }
-      }
-
-      // 4. Try without "thinking" variants
-      //    Handles: -thinking, -thinking-32k, (thinking-minimal), .thinking-high, etc.
-      const withoutThinking = normalized
-        .replace(/\(thinking[^)]*\)/g, '')  // Remove (thinking...) parenthetical
-        .replace(/[.-]thinking(-[a-z0-9]+)*$/i, '')  // Remove -thinking and any suffixes like -32k, -high
-        .replace(/[.-]thinking$/i, '')  // Simple .thinking suffix
-        .replace(/--+/g, '-')  // Clean up double dashes
-        .replace(/[.-]$/, '')  // Remove trailing dash or dot
-        .trim();
-
-      if (withoutThinking !== normalized && withoutThinking.length > 0) {
-        // First check exact match without thinking
-        if (this.pricingMap.has(withoutThinking)) {
-          return this.pricingMap.get(withoutThinking);
-        }
-        // Recursively try matching the non-thinking version
-        const baseMatch = this._findMatch(withoutThinking);
-        if (baseMatch) {
-          return baseMatch;
-        }
-      }
-
-      // 5. Try stripping BOTH dates AND thinking (for models like claude-sonnet-4-5-20250929-thinking-32k)
-      const withoutDatesAndThinking = withoutDates
-        .replace(/\(thinking[^)]*\)/g, '')
-        .replace(/[.-]thinking(-[a-z0-9]+)*$/i, '')
-        .replace(/[.-]thinking$/i, '')
-        .replace(/--+/g, '-')
-        .replace(/[.-]$/, '')
-        .trim();
-
-      if (withoutDatesAndThinking !== normalized && withoutDatesAndThinking !== withoutDates &&
-        withoutDatesAndThinking !== withoutThinking && withoutDatesAndThinking.length > 0) {
-        if (this.pricingMap.has(withoutDatesAndThinking)) {
-          return this.pricingMap.get(withoutDatesAndThinking);
-        }
-        const combinedMatch = this._findMatch(withoutDatesAndThinking);
-        if (combinedMatch) {
-          return combinedMatch;
-        }
-      }
-
-      // 4. Check for operator-based matching (from Helicone data)
-      //    IMPORTANT: Prefer LONGER/more specific keys when multiple match
-      let operatorMatch = null;
-      let operatorMatchLength = 0;
-
-      for (const [key, entry] of this.pricingMap) {
-        if (entry.operator === 'includes' && normalized.includes(key)) {
-          if (key.length > operatorMatchLength) {
-            operatorMatch = entry;
-            operatorMatchLength = key.length;
-          }
-        }
-        if (entry.operator === 'startsWith' && normalized.startsWith(key)) {
-          if (key.length > operatorMatchLength) {
-            operatorMatch = entry;
-            operatorMatchLength = key.length;
-          }
-        }
-      }
-
-      if (operatorMatch) {
-        return operatorMatch;
-      }
-
-      // 5. Search term starts with key (source is the base, we have a more specific version)
-      //    Example: "gemini-3-pro-20240101" matches source "gemini-3-pro"
-      let bestMatch = null;
-      let bestMatchLength = 0;
-
-      for (const [key, entry] of this.pricingMap) {
-        if (normalized.startsWith(key)) {
-          const charAfterKey = normalized[key.length];
-          const charAfterKeyPlus1 = normalized[key.length + 1];
-          // Check for valid separator, but NOT if it's a version number continuation
-          // e.g., "grok-4" should NOT match "grok-4.1" because ".1" is a version extension
-          const isVersionContinuation = (charAfterKey === '.' || charAfterKey === '-') &&
-            charAfterKeyPlus1 >= '0' && charAfterKeyPlus1 <= '9' &&
-            key[key.length - 1] >= '0' && key[key.length - 1] <= '9';
-          if (charAfterKey === undefined ||
-            ((charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/' || charAfterKey === ':') && !isVersionContinuation)) {
-            if (key.length > bestMatchLength) {
-              bestMatch = entry;
-              bestMatchLength = key.length;
-            }
-          }
-        }
-      }
-
-      if (bestMatch) {
-        return bestMatch;
-      }
-
-      // 6. Key starts with search term (source has more specificity like -preview suffix)
-      //    Example: "gemini-3-pro" matches source "gemini-3-pro-preview"
-      //    IMPORTANT: Prefer SHORTEST matching key to avoid "gemini-3-pro" matching "gemini-3-pro-image-preview"
-      let shortestMatch = null;
-      let shortestMatchLength = Infinity;
-
-      for (const [key, entry] of this.pricingMap) {
-        if (key.startsWith(normalized)) {
-          const charAfterNormalized = key[normalized.length];
-          // Valid match if key continues with a separator
-          if (charAfterNormalized === '-' || charAfterNormalized === '.' || charAfterNormalized === '/' || charAfterNormalized === ':') {
-            if (key.length < shortestMatchLength) {
-              shortestMatch = entry;
-              shortestMatchLength = key.length;
-            }
-          }
-        }
-      }
-
-      if (shortestMatch) {
-        return shortestMatch;
-      }
-
-      return null;
-    }
-
-    // Helper method for matching without recursion issues
-    _findMatch(normalized) {
-      // Check exact match
-      if (this.pricingMap.has(normalized)) {
-        return this.pricingMap.get(normalized);
-      }
-
-      // Check operator-based matching - prefer longer keys
-      let operatorMatch = null;
-      let operatorMatchLength = 0;
-      for (const [key, entry] of this.pricingMap) {
-        if (entry.operator === 'includes' && normalized.includes(key)) {
-          if (key.length > operatorMatchLength) {
-            operatorMatch = entry;
-            operatorMatchLength = key.length;
-          }
-        }
-        if (entry.operator === 'startsWith' && normalized.startsWith(key)) {
-          if (key.length > operatorMatchLength) {
-            operatorMatch = entry;
-            operatorMatchLength = key.length;
-          }
-        }
-      }
-      if (operatorMatch) return operatorMatch;
-
-      // Check if normalized starts with any key
-      let bestMatch = null;
-      let bestMatchLength = 0;
-      for (const [key, entry] of this.pricingMap) {
-        if (normalized.startsWith(key)) {
-          const charAfterKey = normalized[key.length];
-          const charAfterKeyPlus1 = normalized[key.length + 1];
-          // Check for valid separator, but NOT if it's a version number continuation
-          const isVersionContinuation = (charAfterKey === '.' || charAfterKey === '-') &&
-            charAfterKeyPlus1 >= '0' && charAfterKeyPlus1 <= '9' &&
-            key[key.length - 1] >= '0' && key[key.length - 1] <= '9';
-          if (charAfterKey === undefined ||
-            ((charAfterKey === '-' || charAfterKey === '.' || charAfterKey === '/' || charAfterKey === ':') && !isVersionContinuation)) {
-            if (key.length > bestMatchLength) {
-              bestMatch = entry;
-              bestMatchLength = key.length;
-            }
-          }
-        }
-      }
-      if (bestMatch) return bestMatch;
-
-      // Check if any key starts with normalized
-      let shortestMatch = null;
-      let shortestMatchLength = Infinity;
-      for (const [key, entry] of this.pricingMap) {
-        if (key.startsWith(normalized)) {
-          const charAfterNormalized = key[normalized.length];
-          if (charAfterNormalized === '-' || charAfterNormalized === '.' || charAfterNormalized === '/' || charAfterNormalized === ':') {
-            if (key.length < shortestMatchLength) {
-              shortestMatch = entry;
-              shortestMatchLength = key.length;
-            }
-          }
-        }
-      }
-
-      return shortestMatch;
+      // Use checkOperators for Helicone's includes/startsWith matching
+      return ModelMatcher.findMatch(this.pricingMap, modelName, { checkOperators: true });
     }
   }
 
@@ -1285,7 +1126,7 @@
       cell.onmouseenter = null;
       cell.onmouseleave = null;
 
-      if (contextData) {
+      if (contextData && contextData.hasExplicitModalities) {
         const inputMods = contextData.input_modalities || ['text'];
         const outputMods = contextData.output_modalities || ['text'];
         cell.innerHTML = this._renderModalitiesIcons(inputMods, outputMods);
