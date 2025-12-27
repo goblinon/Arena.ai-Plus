@@ -72,7 +72,7 @@
   // ============================================
   // Elo per Dollar Helpers (Logarithmic Formula)
   // ============================================
-  const ELO_BASELINE = 1150;
+  const ELO_BASELINE = 1000;
 
   /**
    * Calculate Value Score using logarithmic price compression
