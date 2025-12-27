@@ -143,21 +143,6 @@
   font-style: italic;
 }
 
-/* Modality status in tooltip */
-.lmarena-price-tooltip__mods {
-  font-size: 12px;
-}
-
-.lmarena-price-tooltip__mod-yes {
-  color: #4ade80;
-  margin-right: 8px;
-}
-
-.lmarena-price-tooltip__mod-no {
-  color: #555;
-  margin-right: 8px;
-}
-
 /* Ensure injected column doesn't break table layout */
 table th.lmarena-price-header,
 table td.lmarena-price-cell {

@@ -96,26 +96,6 @@
     return score;
   }
 
-  /**
-   * Get gem rating (1-5 gems) based on Value Score
-   * Thresholds calibrated for the logarithmic formula output range
-   * @param {number} valueScore - The calculated value score
-   * @returns {string} - Gem emoji string (1-5 gems)
-   */
-  function getGemRating(valueScore) {
-    if (valueScore === null) return '';
-
-    // Thresholds calibrated for logarithmic formula
-    // Example: Flash ($3.50) ≈ 270, Opus ($30.00) ≈ 150
-    // Higher score = better value
-    if (valueScore >= 250) return '💎💎💎💎💎'; // Exceptional value (5 gems)
-    if (valueScore >= 180) return '💎💎💎💎';   // Great value (4 gems)
-    if (valueScore >= 120) return '💎💎💎';     // Good value (3 gems)
-    if (valueScore >= 80) return '💎💎';        // Fair value (2 gems)
-    if (valueScore >= 40) return '💎';          // Low value (1 gem)
-    return '';                                  // Poor value (no gems)
-  }
-
   async function loadPreferences() {
     try {
       const result = await chrome.storage.sync.get([CONFIG.TOKEN_UNIT_KEY, CONFIG.PROVIDER_KEY, CONFIG.COLUMN_VISIBILITY_KEY]);
@@ -1380,7 +1360,6 @@
         const inputCost = pricing.input_cost_per_1m || 0;
         const outputCost = pricing.output_cost_per_1m || 0;
         const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost);
-        const gemRating = getGemRating(valueScore);
 
         if (valueScore !== null) {
           // Format: show score with 1 decimal for cleaner display
