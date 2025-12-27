@@ -376,15 +376,26 @@ table td.lmarena-ctx-cell {
 .lmarena-mod-icon {
   width: 14px;
   height: 14px;
+}
+
+/* Dark mode: invert icons to white */
+html.dark .lmarena-mod-icon {
   filter: invert(1);
 }
 
+/* Light mode: keep icons black (no filter needed) */
+html.light .lmarena-mod-icon {
+  filter: none;
+}
+
+/* Enabled state - full opacity */
 .lmarena-mod-icon.lmarena-mod-enabled {
   opacity: 1;
 }
 
+/* Disabled state - gray (works for both modes) */
 .lmarena-mod-icon.lmarena-mod-disabled {
-  opacity: 0.25;
+  opacity: 0.3;
 }
 
 /* Ensure Modalities column doesn't break table layout */
