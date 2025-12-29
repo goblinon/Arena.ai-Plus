@@ -69,6 +69,10 @@
     return costPer1M * (targetUnit / 1000000);
   }
 
+  function formatCost(cost) {
+    return cost.toFixed(2);
+  }
+
   // ============================================
   // Elo per Dollar Helpers (Logarithmic Formula)
   // ============================================
@@ -657,11 +661,11 @@
           <div class="lmarena-price-tooltip__breakdown">
             <div class="lmarena-price-tooltip__row">
               <span class="lmarena-price-tooltip__label">Input tokens:</span>
-              <span class="lmarena-price-tooltip__value">$${this._formatCost(inputCost)}</span>
+              <span class="lmarena-price-tooltip__value">$${formatCost(inputCost)}</span>
             </div>
             <div class="lmarena-price-tooltip__row">
               <span class="lmarena-price-tooltip__label">Output tokens:</span>
-              <span class="lmarena-price-tooltip__value">$${this._formatCost(outputCost)}</span>
+              <span class="lmarena-price-tooltip__value">$${formatCost(outputCost)}</span>
             </div>
           </div>
           <div class="lmarena-price-tooltip__source">Source: ${providerName}</div>
@@ -765,10 +769,6 @@
 
       this.tooltip.style.left = `${left}px`;
       this.tooltip.style.top = `${top}px`;
-    }
-
-    _formatCost(cost) {
-      return cost.toFixed(2);
     }
   }
 
@@ -1159,11 +1159,10 @@
       const th = document.createElement('th');
       th.className = 'lmarena-price-header';
 
-      // Create sortable button with icon
-      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      // Create sortable button
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
-      button.innerHTML = `Pricing <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.innerHTML = `Pricing <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('pricing'));
 
       th.appendChild(button);
@@ -1180,11 +1179,10 @@
       const th = document.createElement('th');
       th.className = 'lmarena-elopd-header';
 
-      // Create sortable button with icon
-      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      // Create sortable button
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
-      button.innerHTML = `Bang for Buck <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.innerHTML = `Bang for Buck <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('elopd'));
 
       th.appendChild(button);
@@ -1260,11 +1258,10 @@
       const th = document.createElement('th');
       th.className = 'lmarena-ctx-header';
 
-      // Create sortable button with icon
-      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+      // Create sortable button
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
-      button.innerHTML = `Context Size <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.innerHTML = `Context Size <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('ctx'));
 
       th.appendChild(button);
@@ -1335,9 +1332,8 @@
       const th = document.createElement('th');
       th.className = 'lmarena-mod-header';
 
-      // Modalities is not sortable (no numeric value), just show header without sort button
-      const iconUrl = chrome.runtime.getURL('icons/icon16.png');
-      th.innerHTML = `Modalities <class="lmarena-price-header__icon" alt="LMArena Plus">`;
+      // Modalities is not sortable (no numeric value), just show header text
+      th.textContent = 'Modalities';
 
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
@@ -1457,10 +1453,9 @@
         const rawTotal = (pricing.input_cost_per_1m || 0) + (pricing.output_cost_per_1m || 0);
         if (row) row._lmarenaPlusPricing = rawTotal;
 
-        // New layout: bold total on top, input/output side by side below
         cell.innerHTML = `
-          <div class="lmarena-price-total">$${this._formatCost(totalCost)}</div>
-          <div class="lmarena-price-breakdown">$${this._formatCost(inputCost)} / $${this._formatCost(outputCost)}</div>
+          <div class="lmarena-price-total">$${formatCost(totalCost)}</div>
+          <div class="lmarena-price-breakdown">$${formatCost(inputCost)} / $${formatCost(outputCost)}</div>
         `;
         cell.classList.remove('lmarena-price-cell--na');
 
@@ -1529,10 +1524,6 @@
       if (span) return span.textContent.trim();
 
       return cell.textContent.trim();
-    }
-
-    _formatCost(cost) {
-      return cost.toFixed(2);
     }
   }
 

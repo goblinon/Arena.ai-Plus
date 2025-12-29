@@ -1,7 +1,14 @@
 /* LMArena Plus Extension Styles */
 
-/* Column header */
-.lmarena-price-header {
+/* ============================================ */
+/* Shared Column Styles (Base Classes) */
+/* ============================================ */
+
+/* Shared column header base */
+.lmarena-price-header,
+.lmarena-elopd-header,
+.lmarena-ctx-header,
+.lmarena-mod-header {
   font-family: inherit;
   font-size: 12px;
   font-weight: inherit;
@@ -11,7 +18,89 @@
   padding: 14px 24px;
 }
 
-/* Sort button - matches LMArena's native header buttons */
+/* Shared column cell base */
+.lmarena-price-cell,
+.lmarena-elopd-cell,
+.lmarena-ctx-cell,
+.lmarena-mod-cell {
+  font-family: inherit;
+  font-size: 14px;
+  color: inherit;
+  padding: 14px 24px;
+  white-space: nowrap;
+  position: relative;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Shared hover effect */
+.lmarena-price-cell:hover,
+.lmarena-elopd-cell:hover,
+.lmarena-ctx-cell:hover,
+.lmarena-mod-cell:hover {
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* Shared N/A state */
+.lmarena-price-cell--na,
+.lmarena-elopd-cell--na,
+.lmarena-ctx-cell--na,
+.lmarena-mod-cell--na {
+  color: #888;
+  font-style: italic;
+}
+
+/* Shared loading state base */
+.lmarena-price-cell--loading,
+.lmarena-elopd-cell--loading,
+.lmarena-ctx-cell--loading,
+.lmarena-mod-cell--loading {
+  color: #666;
+}
+
+/* Shared loading spinner base */
+.lmarena-price-cell--loading::after,
+.lmarena-elopd-cell--loading::after,
+.lmarena-ctx-cell--loading::after,
+.lmarena-mod-cell--loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 2px solid #3a3a5e;
+  border-radius: 50%;
+  animation: lmarena-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+/* Loading spinner accent colors */
+.lmarena-price-cell--loading::after,
+.lmarena-elopd-cell--loading::after {
+  border-top-color: #4ade80;
+  /* Green */
+}
+
+.lmarena-ctx-cell--loading::after {
+  border-top-color: #60a5fa;
+  /* Blue */
+}
+
+.lmarena-mod-cell--loading::after {
+  border-top-color: #a78bfa;
+  /* Purple */
+}
+
+@keyframes lmarena-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* Sort Button Styles */
+/* ============================================ */
+
 .lmarena-sort-button {
   display: flex;
   align-items: center;
@@ -31,14 +120,12 @@
   opacity: 0.8;
 }
 
-/* Sort icon container */
 .lmarena-sort-icon-container {
   display: inline-flex;
   align-items: center;
   margin-left: 4px;
 }
 
-/* Sort icon SVG */
 .lmarena-sort-icon {
   width: 12px;
   height: 12px;
@@ -50,39 +137,17 @@
   opacity: 1;
 }
 
-/* Active sort icon */
 .lmarena-sort-icon--active {
   opacity: 1;
 }
 
+/* ============================================ */
+/* Pricing Column Specifics */
+/* ============================================ */
 
-/* Header icon */
-.lmarena-price-header__icon {
-  display: inline;
-  width: 16px;
-  height: 16px;
-  vertical-align: middle;
-  margin-left: 6px;
-  opacity: 0.9;
-}
-
-/* Price cell */
 .lmarena-price-cell {
-  font-family: inherit;
-  font-size: 14px;
-  color: inherit;
   text-align: right;
-  padding: 14px 24px;
-  white-space: nowrap;
   cursor: help;
-  position: relative;
-  /* Ensure full cell is hoverable */
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.lmarena-price-cell:hover {
-  background-color: rgba(74, 222, 128, 0.05);
 }
 
 /* Pricing cell layout - stacked display */
@@ -105,13 +170,107 @@
   margin-top: 2px;
 }
 
-/* N/A state */
-.lmarena-price-cell--na {
-  color: #888;
-  font-style: italic;
+table th.lmarena-price-header,
+table td.lmarena-price-cell {
+  min-width: 140px;
+  max-width: 200px;
 }
 
-/* Tooltip container */
+/* ============================================ */
+/* Elo per Dollar Column Specifics */
+/* ============================================ */
+
+.lmarena-elopd-cell {
+  text-align: right;
+}
+
+.lmarena-elopd-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+table th.lmarena-elopd-header,
+table td.lmarena-elopd-cell {
+  min-width: 120px;
+  max-width: 180px;
+}
+
+/* ============================================ */
+/* Context Window Column Specifics */
+/* ============================================ */
+
+.lmarena-ctx-cell {
+  text-align: right;
+}
+
+.lmarena-ctx-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+table th.lmarena-ctx-header,
+table td.lmarena-ctx-cell {
+  min-width: 80px;
+  max-width: 120px;
+}
+
+/* ============================================ */
+/* Modalities Column Specifics */
+/* ============================================ */
+
+.lmarena-mod-cell {
+  text-align: left;
+  padding: 14px 16px;
+}
+
+.lmarena-mod-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.lmarena-mod-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.lmarena-mod-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Dark mode: invert icons to white */
+html.dark .lmarena-mod-icon {
+  filter: invert(1);
+}
+
+/* Light mode: keep icons black (no filter needed) */
+html.light .lmarena-mod-icon {
+  filter: none;
+}
+
+.lmarena-mod-icon.lmarena-mod-enabled {
+  opacity: 1;
+}
+
+.lmarena-mod-icon.lmarena-mod-disabled {
+  opacity: 0.3;
+}
+
+table th.lmarena-mod-header,
+table td.lmarena-mod-cell {
+  min-width: 100px;
+  max-width: 200px;
+}
+
+/* ============================================ */
+/* Tooltip Styles */
+/* ============================================ */
+
 .lmarena-price-tooltip {
   position: fixed;
   z-index: 10000;
@@ -136,7 +295,6 @@
   transform: translateY(0);
 }
 
-/* Tooltip content - Model name from source */
 .lmarena-price-tooltip__total,
 .lmarena-price-tooltip__model-name {
   font-size: 14px;
@@ -180,290 +338,9 @@
   border-top: 1px solid #3a3a5e;
 }
 
-/* Tooltip explanation text */
 .lmarena-price-tooltip__explanation {
   font-size: 11px;
   color: #888;
   margin-bottom: 10px;
   font-style: italic;
-}
-
-/* Ensure injected column doesn't break table layout */
-table th.lmarena-price-header,
-table td.lmarena-price-cell {
-  min-width: 140px;
-  max-width: 200px;
-}
-
-/* Loading state */
-.lmarena-price-cell--loading {
-  color: #666;
-}
-
-.lmarena-price-cell--loading::after {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  border: 2px solid #3a3a5e;
-  border-top-color: #4ade80;
-  border-radius: 50%;
-  animation: lmarena-spin 0.8s linear infinite;
-  vertical-align: middle;
-}
-
-@keyframes lmarena-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ============================================ */
-/* Elo per Dollar Column Styles */
-/* ============================================ */
-
-/* Elo/$ column header */
-.lmarena-elopd-header {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: inherit;
-  color: inherit;
-  white-space: nowrap;
-  text-align: left;
-  padding: 14px 24px;
-}
-
-/* Elo/$ cell */
-.lmarena-elopd-cell {
-  font-family: inherit;
-  font-size: 14px;
-  color: inherit;
-  text-align: right;
-  padding: 14px 24px;
-  white-space: nowrap;
-  position: relative;
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.lmarena-elopd-cell:hover {
-  background-color: rgba(74, 222, 128, 0.05);
-}
-
-/* N/A state */
-.lmarena-elopd-cell--na {
-  color: #888;
-  font-style: italic;
-}
-
-/* Value display */
-.lmarena-elopd-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: #4ade80;
-  font-weight: 600;
-}
-
-/* Gem rating display */
-.lmarena-elopd-gems {
-  margin-left: 6px;
-  font-size: 12px;
-  letter-spacing: -2px;
-}
-
-/* Ensure Elo/$ column doesn't break table layout */
-table th.lmarena-elopd-header,
-table td.lmarena-elopd-cell {
-  min-width: 120px;
-  max-width: 180px;
-}
-
-/* Loading state for Elo/$ */
-.lmarena-elopd-cell--loading {
-  color: #666;
-}
-
-.lmarena-elopd-cell--loading::after {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  border: 2px solid #3a3a5e;
-  border-top-color: #4ade80;
-  border-radius: 50%;
-  animation: lmarena-spin 0.8s linear infinite;
-  vertical-align: middle;
-}
-
-/* ============================================ */
-/* Context Window Column Styles */
-/* ============================================ */
-
-/* Context column header */
-.lmarena-ctx-header {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: inherit;
-  color: inherit;
-  white-space: nowrap;
-  text-align: left;
-  padding: 14px 24px;
-}
-
-/* Context cell */
-.lmarena-ctx-cell {
-  font-family: inherit;
-  font-size: 14px;
-  color: inherit;
-  text-align: right;
-  padding: 14px 24px;
-  white-space: nowrap;
-  position: relative;
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.lmarena-ctx-cell:hover {
-  background-color: rgba(74, 222, 128, 0.05);
-}
-
-/* N/A state */
-.lmarena-ctx-cell--na {
-  color: #888;
-  font-style: italic;
-}
-
-/* Value display */
-.lmarena-ctx-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: #60a5fa;
-  font-weight: 600;
-}
-
-/* Ensure Context column doesn't break table layout */
-table th.lmarena-ctx-header,
-table td.lmarena-ctx-cell {
-  min-width: 80px;
-  max-width: 120px;
-}
-
-/* Loading state for Context */
-.lmarena-ctx-cell--loading {
-  color: #666;
-}
-
-.lmarena-ctx-cell--loading::after {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  border: 2px solid #3a3a5e;
-  border-top-color: #60a5fa;
-  border-radius: 50%;
-  animation: lmarena-spin 0.8s linear infinite;
-  vertical-align: middle;
-}
-
-/* ============================================ */
-/* Modalities Column Styles */
-/* ============================================ */
-
-/* Modalities column header */
-.lmarena-mod-header {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: inherit;
-  color: inherit;
-  white-space: nowrap;
-  text-align: left;
-  padding: 14px 24px;
-}
-
-/* Modalities cell */
-.lmarena-mod-cell {
-  font-family: inherit;
-  font-size: 14px;
-  color: inherit;
-  text-align: left;
-  padding: 14px 16px;
-  white-space: nowrap;
-  position: relative;
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.lmarena-mod-cell:hover {
-  background-color: rgba(74, 222, 128, 0.05);
-}
-
-/* N/A state */
-.lmarena-mod-cell--na {
-  color: #888;
-  font-style: italic;
-}
-
-/* Modalities icons container */
-.lmarena-mod-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  pointer-events: none;
-}
-
-.lmarena-mod-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.lmarena-mod-icon {
-  width: 14px;
-  height: 14px;
-}
-
-/* Dark mode: invert icons to white */
-html.dark .lmarena-mod-icon {
-  filter: invert(1);
-}
-
-/* Light mode: keep icons black (no filter needed) */
-html.light .lmarena-mod-icon {
-  filter: none;
-}
-
-/* Enabled state - full opacity */
-.lmarena-mod-icon.lmarena-mod-enabled {
-  opacity: 1;
-}
-
-/* Disabled state - gray (works for both modes) */
-.lmarena-mod-icon.lmarena-mod-disabled {
-  opacity: 0.3;
-}
-
-/* Ensure Modalities column doesn't break table layout */
-table th.lmarena-mod-header,
-table td.lmarena-mod-cell {
-  min-width: 100px;
-  max-width: 200px;
-}
-
-/* Loading state for Modalities */
-.lmarena-mod-cell--loading {
-  color: #666;
-}
-
-.lmarena-mod-cell--loading::after {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  border: 2px solid #3a3a5e;
-  border-top-color: #a78bfa;
-  border-radius: 50%;
-  animation: lmarena-spin 0.8s linear infinite;
-  vertical-align: middle;
 }
