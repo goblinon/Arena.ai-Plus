@@ -35,7 +35,6 @@
     DEFAULT_PROVIDER: 'openrouter',
     DEFAULT_COLUMN_VISIBILITY: {
       'rank': true,
-      'model': true,
       'arena-score': true,
       '95-ci': true,
       'votes': true,
@@ -140,19 +139,46 @@
       // Build index map from actual column headers
       const indexMap = {};
       headers.forEach((header, idx) => {
-        // Skip LMArena Plus injected headers
-        if (header.classList.contains('lmarena-price-header') ||
-          header.classList.contains('lmarena-elopd-header')) {
+        // Skip ALL LMArena Plus injected headers
+        if (header.hasAttribute && header.hasAttribute(CONFIG.COLUMN_MARKER)) {
           return;
         }
+        if (header.classList.contains('lmarena-price-header') ||
+          header.classList.contains('lmarena-elopd-header') ||
+          header.classList.contains('lmarena-ctx-header') ||
+          header.classList.contains('lmarena-mod-header')) {
+          return;
+        }
+
         const text = header.textContent.toLowerCase().trim();
-        if (text.includes('rank') || text === '#') indexMap['rank'] = idx;
-        else if (text.includes('model')) indexMap['model'] = idx;
-        else if (text.includes('arena score') || text === 'score') indexMap['arena-score'] = idx;
-        else if (text.includes('ci') || text.includes('confidence')) indexMap['95-ci'] = idx;
-        else if (text.includes('vote')) indexMap['votes'] = idx;
-        else if (text.includes('organization') || text.includes('org')) indexMap['organization'] = idx;
-        else if (text.includes('license')) indexMap['license'] = idx;
+
+        // More specific matching to avoid false positives
+        // Rank Spread column - ONLY match if it contains BOTH 'rank' AND 'spread'
+        // Regular rank columns (just '#' or 'Rank') should NOT be affected
+        if (text.includes('rank') && text.includes('spread')) {
+          indexMap['rank'] = idx;
+        }
+        // Arena score - specifically "score" column, not just containing "score"
+        else if (text === 'arena score' || text === 'score' || text.includes('arena score')) {
+          indexMap['arena-score'] = idx;
+        }
+        // 95% CI
+        else if (text.includes('95%') || text.includes('ci') || text.includes('confidence')) {
+          indexMap['95-ci'] = idx;
+        }
+        // Votes
+        else if (text.includes('vote')) {
+          indexMap['votes'] = idx;
+        }
+        // Organization
+        else if (text.includes('organization') || text.includes('org')) {
+          indexMap['organization'] = idx;
+        }
+        // License
+        else if (text.includes('license')) {
+          indexMap['license'] = idx;
+        }
+        // NOTE: Model column is NOT mapped - it should NEVER be hidden
       });
 
       // Apply visibility to all rows
@@ -160,7 +186,7 @@
       allRows.forEach(row => {
         const cells = row.querySelectorAll('th, td');
 
-        // Regular columns
+        // Regular columns (excluding model which is always visible)
         for (const [columnId, colIdx] of Object.entries(indexMap)) {
           if (cells[colIdx]) {
             cells[colIdx].style.display = currentColumnVisibility[columnId] ? '' : 'none';

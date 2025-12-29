@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LMArena Plus",
-  "version": "1.3.4",
+  "version": "1.3.6",
   "description": "Adds pricing and other useful data to LMArena's leaderboard tables.",
   "permissions": [
     "storage",

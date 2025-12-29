@@ -15,7 +15,6 @@
     // Default column visibility - all columns visible
     const DEFAULT_COLUMN_VISIBILITY = {
         'rank': true,
-        'model': true,
         'arena-score': true,
         '95-ci': true,
         'votes': true,
