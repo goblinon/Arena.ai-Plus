@@ -125,26 +125,18 @@ body {
 .column-picker {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     background: #2a2a4e;
     border: 1px solid #3a3a5e;
     border-radius: 6px;
     padding: 12px;
 }
 
-.column-section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.column-section-title {
-    font-size: 11px;
+.plus-badge {
+    font-size: 10px;
     font-weight: 600;
     color: #4ade80;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    margin-left: 4px;
 }
 
 .checkbox-item {
