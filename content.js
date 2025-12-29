@@ -770,6 +770,69 @@
       this.tooltip.style.left = `${left}px`;
       this.tooltip.style.top = `${top}px`;
     }
+
+    showHeaderInfo(element, columnType) {
+      // Cancel any pending hide
+      clearTimeout(this.hideTimeout);
+
+      const isNewElement = this.currentElement !== element;
+      if (isNewElement) {
+        clearTimeout(this.showTimeout);
+      }
+
+      this.currentElement = element;
+
+      const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
+
+      this.showTimeout = setTimeout(() => {
+        const headerInfo = {
+          pricing: {
+            title: 'Pricing',
+            description: 'Cost per token to use this model',
+            details: 'Shows combined input + output cost, with breakdown below'
+          },
+          elopd: {
+            title: 'Bang for Buck',
+            description: 'Performance relative to cost',
+            details: 'Higher = better value. Compares Arena Score against price'
+          },
+          ctx: {
+            title: 'Context Size',
+            description: 'Maximum tokens the model can process',
+            details: 'Larger context = can handle longer conversations or documents'
+          },
+          mod: {
+            title: 'Modalities',
+            description: 'Data types the model can handle',
+            details: 'Top row: inputs accepted. Bottom row: outputs generated'
+          }
+        };
+
+        const info = headerInfo[columnType];
+        if (!info) return;
+
+        this.tooltip.innerHTML = `
+          <div class="lmarena-price-tooltip__total">
+            ${info.title}
+          </div>
+          <div class="lmarena-price-tooltip__explanation">
+            ${info.description}
+          </div>
+          <div class="lmarena-price-tooltip__breakdown">
+            <div class="lmarena-price-tooltip__row">
+              <span class="lmarena-price-tooltip__label">${info.details}</span>
+            </div>
+          </div>
+          <div class="lmarena-price-tooltip__source">Click to sort (where available)</div>
+        `;
+
+        this.tooltip.classList.add('lmarena-price-tooltip--visible');
+
+        requestAnimationFrame(() => {
+          this._positionTooltip(element);
+        });
+      }, showDelay);
+    }
   }
 
   // ============================================
@@ -1165,6 +1228,10 @@
       button.innerHTML = `Pricing <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('pricing'));
 
+      // Add tooltip hover
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'pricing'));
+      th.addEventListener('mouseleave', () => this.tooltipManager.hide());
+
       th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
@@ -1184,6 +1251,10 @@
       button.className = 'lmarena-sort-button';
       button.innerHTML = `Bang for Buck <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('elopd'));
+
+      // Add tooltip hover
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'elopd'));
+      th.addEventListener('mouseleave', () => this.tooltipManager.hide());
 
       th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
@@ -1264,6 +1335,10 @@
       button.innerHTML = `Context Size <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('ctx'));
 
+      // Add tooltip hover
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'ctx'));
+      th.addEventListener('mouseleave', () => this.tooltipManager.hide());
+
       th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
@@ -1334,6 +1409,10 @@
 
       // Modalities is not sortable (no numeric value), just show header text
       th.textContent = 'Modalities';
+
+      // Add tooltip hover
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'mod'));
+      th.addEventListener('mouseleave', () => this.tooltipManager.hide());
 
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
