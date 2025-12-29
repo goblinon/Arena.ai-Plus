@@ -11,6 +11,51 @@
   padding: 14px 24px;
 }
 
+/* Sort button - matches LMArena's native header buttons */
+.lmarena-sort-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lmarena-sort-button:hover {
+  opacity: 0.8;
+}
+
+/* Sort icon container */
+.lmarena-sort-icon-container {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+/* Sort icon SVG */
+.lmarena-sort-icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.lmarena-sort-button:hover .lmarena-sort-icon {
+  opacity: 1;
+}
+
+/* Active sort icon */
+.lmarena-sort-icon--active {
+  opacity: 1;
+}
+
+
 /* Header icon */
 .lmarena-price-header__icon {
   display: inline;

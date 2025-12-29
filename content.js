@@ -773,14 +773,227 @@
   }
 
   // ============================================
+  // Sort Manager
+  // ============================================
+  const SORT_ICONS = {
+    default: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lmarena-sort-icon"><path d="m21 16-4 4-4-4"></path><path d="M17 20V4"></path><path d="m3 8 4-4 4 4"></path><path d="M7 4v16"></path></svg>`,
+    asc: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lmarena-sort-icon lmarena-sort-icon--active"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg>`,
+    desc: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lmarena-sort-icon lmarena-sort-icon--active"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>`
+  };
+
+  class SortManager {
+    constructor() {
+      this.currentColumn = null; // 'pricing', 'elopd', 'ctx', 'mod', or null
+      this.currentDirection = null; // 'asc', 'desc', or null
+      this.headerButtons = new Map(); // columnType -> button element
+      this._setupNativeSortListener();
+    }
+
+    _setupNativeSortListener() {
+      // Listen for clicks on native headers to clear our sort
+      document.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const th = button.closest('th');
+        if (!th) return;
+
+        // Check if this is a native header (not our injected ones)
+        if (th.classList.contains('lmarena-price-header') ||
+          th.classList.contains('lmarena-elopd-header') ||
+          th.classList.contains('lmarena-ctx-header') ||
+          th.classList.contains('lmarena-mod-header')) {
+          return;
+        }
+
+        // A native header was clicked, clear our sort state
+        this.clearSort();
+      }, true);
+    }
+
+    registerHeader(columnType, button) {
+      const oldButton = this.headerButtons.get(columnType);
+
+      // If new button is different from old, reset sort state for this column
+      if (oldButton && oldButton !== button) {
+        // Clear sort state when buttons change (table was replaced)
+        if (this.currentColumn === columnType) {
+          this.currentColumn = null;
+          this.currentDirection = null;
+        }
+      }
+
+      this.headerButtons.set(columnType, button);
+      this._updateButtonIcon(button, 'default');
+    }
+
+    toggleSort(columnType) {
+      let newDirection;
+
+      if (this.currentColumn === columnType) {
+        // Cycle: asc -> desc -> null
+        if (this.currentDirection === 'asc') {
+          newDirection = 'desc';
+        } else if (this.currentDirection === 'desc') {
+          newDirection = null;
+        } else {
+          newDirection = 'asc';
+        }
+      } else {
+        // New column, start with ascending
+        newDirection = 'asc';
+      }
+
+      // Reset all buttons to default
+      for (const [type, btn] of this.headerButtons) {
+        this._updateButtonIcon(btn, 'default');
+      }
+
+      if (newDirection) {
+        this.currentColumn = columnType;
+        this.currentDirection = newDirection;
+        const button = this.headerButtons.get(columnType);
+        if (button) {
+          this._updateButtonIcon(button, newDirection);
+        }
+        this._sortTable(columnType, newDirection);
+      } else {
+        this.currentColumn = null;
+        this.currentDirection = null;
+        this._restoreOriginalOrder();
+      }
+    }
+
+    clearSort() {
+      if (this.currentColumn) {
+        this.currentColumn = null;
+        this.currentDirection = null;
+        for (const [type, btn] of this.headerButtons) {
+          // Only update buttons that are still connected to DOM
+          if (btn && btn.isConnected) {
+            this._updateButtonIcon(btn, 'default');
+          }
+        }
+        // Don't restore order - native sort will handle it
+      }
+    }
+
+    // Reset all state (call when table content is fully replaced)
+    reset() {
+      this.currentColumn = null;
+      this.currentDirection = null;
+      this.headerButtons.clear();
+    }
+
+    _updateButtonIcon(button, state) {
+      // Check if button is still in DOM
+      if (!button || !button.isConnected) return;
+
+      const iconContainer = button.querySelector('.lmarena-sort-icon-container');
+      if (iconContainer) {
+        iconContainer.innerHTML = SORT_ICONS[state] || SORT_ICONS.default;
+      }
+    }
+
+    _sortTable(columnType, direction) {
+      const tables = document.querySelectorAll('table');
+      console.log(`[LMArena Plus Sort] Sorting by ${columnType} ${direction}, found ${tables.length} tables`);
+
+      tables.forEach((table, tableIdx) => {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+          console.log(`[LMArena Plus Sort] Table ${tableIdx}: no tbody`);
+          return;
+        }
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        if (rows.length === 0) {
+          console.log(`[LMArena Plus Sort] Table ${tableIdx}: no rows`);
+          return;
+        }
+
+        // Store original order if not already stored
+        rows.forEach((row, idx) => {
+          if (row._lmarenaOriginalIndex === undefined) {
+            row._lmarenaOriginalIndex = idx;
+          }
+        });
+
+        // Get the sort value property name based on column type
+        const valueKey = this._getValueKey(columnType);
+
+        // Debug: check how many rows have values
+        const rowsWithValues = rows.filter(r => r[valueKey] != null).length;
+        console.log(`[LMArena Plus Sort] Table ${tableIdx}: ${rows.length} rows, ${rowsWithValues} have ${valueKey} values`);
+
+        // Debug: log first few row values
+        rows.slice(0, 5).forEach((row, idx) => {
+          console.log(`[LMArena Plus Sort] Row ${idx}: ${valueKey}=${row[valueKey]}`);
+        });
+
+        // Sort rows
+        rows.sort((a, b) => {
+          const aVal = a[valueKey];
+          const bVal = b[valueKey];
+
+          // Handle null/undefined - push to end
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+
+          const diff = aVal - bVal;
+          return direction === 'asc' ? diff : -diff;
+        });
+
+        // Re-append rows in sorted order
+        rows.forEach(row => tbody.appendChild(row));
+        console.log(`[LMArena Plus Sort] Table ${tableIdx}: sorting complete`);
+      });
+    }
+
+    _restoreOriginalOrder() {
+      const tables = document.querySelectorAll('table');
+
+      tables.forEach(table => {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        if (rows.length === 0) return;
+
+        // Sort by original index
+        rows.sort((a, b) => {
+          const aIdx = a._lmarenaOriginalIndex ?? 0;
+          const bIdx = b._lmarenaOriginalIndex ?? 0;
+          return aIdx - bIdx;
+        });
+
+        // Re-append rows in original order
+        rows.forEach(row => tbody.appendChild(row));
+      });
+    }
+
+    _getValueKey(columnType) {
+      switch (columnType) {
+        case 'pricing': return '_lmarenaPlusPricing';
+        case 'elopd': return '_lmarenaPlusElopd';
+        case 'ctx': return '_lmarenaPlusCtx';
+        case 'mod': return '_lmarenaPlusMod';
+        default: return '_lmarenaPlusPricing';
+      }
+    }
+  }
+
+  // ============================================
   // Column Injector
   // ============================================
   class ColumnInjector {
-    constructor(pricingService, contextService, tooltipManager, loadingManager) {
+    constructor(pricingService, contextService, tooltipManager, loadingManager, sortManager) {
       this.pricingService = pricingService;
       this.contextService = contextService;
       this.tooltipManager = tooltipManager;
       this.loadingManager = loadingManager;
+      this.sortManager = sortManager;
       this.processedTables = new WeakSet();
       this.injectedCells = [];
       this.injectedEloPerDollarCells = [];
@@ -797,9 +1010,17 @@
 
       const arenaScoreColumnIndex = this._findArenaScoreColumnIndex(headerRow);
 
-      if (!table.hasAttribute(CONFIG.COLUMN_MARKER)) {
-        table.setAttribute(CONFIG.COLUMN_MARKER, 'true');
-        this.processedTables.add(table);
+      // Check if our headers are actually present in the header row
+      // LMArena may keep the table element but replace header content, so check DOM directly
+      const hasOurHeaders = headerRow.querySelector('.lmarena-price-header');
+
+      if (!hasOurHeaders) {
+        // Mark table if not already marked
+        if (!table.hasAttribute(CONFIG.COLUMN_MARKER)) {
+          table.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+          this.processedTables.add(table);
+        }
+        // Always inject headers if they don't exist in DOM
         this._injectHeader(headerRow, showLoading);
         this._injectEloPerDollarHeader(headerRow, showLoading);
         this._injectContextWindowHeader(headerRow, showLoading);
@@ -808,6 +1029,7 @@
 
       this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
     }
+
 
     _processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
       const rows = table.querySelectorAll('tbody tr, tr');
@@ -937,12 +1159,19 @@
       const th = document.createElement('th');
       th.className = 'lmarena-price-header';
 
-      // Add icon and text
+      // Create sortable button with icon
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
-      th.innerHTML = `Pricing <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+      const button = document.createElement('button');
+      button.className = 'lmarena-sort-button';
+      button.innerHTML = `Pricing <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.addEventListener('click', () => this.sortManager.toggleSort('pricing'));
 
+      th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
+
+      // Register with sort manager
+      this.sortManager.registerHeader('pricing', button);
     }
 
     _injectEloPerDollarHeader(headerRow, showLoading) {
@@ -951,12 +1180,19 @@
       const th = document.createElement('th');
       th.className = 'lmarena-elopd-header';
 
-      // Add icon and text
+      // Create sortable button with icon
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
-      th.innerHTML = `Elo/$ <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+      const button = document.createElement('button');
+      button.className = 'lmarena-sort-button';
+      button.innerHTML = `Bang for Buck <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.addEventListener('click', () => this.sortManager.toggleSort('elopd'));
 
+      th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
+
+      // Register with sort manager
+      this.sortManager.registerHeader('elopd', button);
     }
 
     _injectCell(row, modelColumnIndex, showLoading) {
@@ -974,14 +1210,15 @@
 
       this.injectedCells.push({ cell: td, modelName });
 
+      // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
+      row.appendChild(td);
+
       if (showLoading) {
         td.textContent = 'Loading';
         td.classList.add('lmarena-price-cell--loading');
       } else {
         this._updateCellContent(td, modelName);
       }
-
-      row.appendChild(td);
     }
 
     _injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
@@ -1006,14 +1243,15 @@
 
       this.injectedEloPerDollarCells.push({ cell: td, modelName, arenaScore });
 
+      // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
+      row.appendChild(td);
+
       if (showLoading) {
         td.textContent = 'Loading';
         td.classList.add('lmarena-elopd-cell--loading');
       } else {
         this._updateEloPerDollarCellContent(td, modelName, arenaScore);
       }
-
-      row.appendChild(td);
     }
 
     _injectContextWindowHeader(headerRow, showLoading) {
@@ -1022,12 +1260,19 @@
       const th = document.createElement('th');
       th.className = 'lmarena-ctx-header';
 
-      // Add icon and text
+      // Create sortable button with icon
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
-      th.innerHTML = `Context Size <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+      const button = document.createElement('button');
+      button.className = 'lmarena-sort-button';
+      button.innerHTML = `Context Size <class="lmarena-price-header__icon" alt="LMArena Plus"><span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.addEventListener('click', () => this.sortManager.toggleSort('ctx'));
 
+      th.appendChild(button);
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
+
+      // Register with sort manager
+      this.sortManager.registerHeader('ctx', button);
     }
 
     _injectContextWindowCell(row, modelColumnIndex, showLoading) {
@@ -1045,27 +1290,32 @@
 
       this.injectedContextWindowCells.push({ cell: td, modelName });
 
+      // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
+      row.appendChild(td);
+
       if (showLoading) {
         td.textContent = 'Loading';
         td.classList.add('lmarena-ctx-cell--loading');
       } else {
         this._updateContextWindowCellContent(td, modelName);
       }
-
-      row.appendChild(td);
     }
 
     _updateContextWindowCellContent(cell, modelName) {
       // Context window always uses OpenRouter data via contextService
       const contextData = this.contextService.getContext(modelName);
+      const row = cell.closest('tr');
 
       if (contextData && contextData.context_length) {
         const formatted = this._formatContextWindow(contextData.context_length);
         cell.innerHTML = `<span class="lmarena-ctx-value">${formatted}</span>`;
         cell.classList.remove('lmarena-ctx-cell--na');
+        // Store sortable value on row
+        if (row) row._lmarenaPlusCtx = contextData.context_length;
       } else {
         cell.textContent = 'N/A';
         cell.classList.add('lmarena-ctx-cell--na');
+        if (row) row._lmarenaPlusCtx = null;
       }
     }
 
@@ -1085,9 +1335,9 @@
       const th = document.createElement('th');
       th.className = 'lmarena-mod-header';
 
-      // Add icon and text
+      // Modalities is not sortable (no numeric value), just show header without sort button
       const iconUrl = chrome.runtime.getURL('icons/icon16.png');
-      th.innerHTML = `Modalities <img src="${iconUrl}" class="lmarena-price-header__icon" alt="LMArena Plus">`;
+      th.innerHTML = `Modalities <class="lmarena-price-header__icon" alt="LMArena Plus">`;
 
       th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
       headerRow.appendChild(th);
@@ -1108,15 +1358,17 @@
 
       this.injectedModalitiesCells.push({ cell: td, modelName });
 
+      // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
+      row.appendChild(td);
+
       if (showLoading) {
         td.textContent = 'Loading';
         td.classList.add('lmarena-mod-cell--loading');
       } else {
         this._updateModalitiesCellContent(td, modelName);
       }
-
-      row.appendChild(td);
     }
+
 
     _updateModalitiesCellContent(cell, modelName) {
       // Modalities always uses OpenRouter data via contextService
@@ -1190,6 +1442,7 @@
     _updateCellContent(cell, modelName) {
       const pricing = this.pricingService.getPricing(modelName);
       const unitLabel = getTokenUnitLabel(currentTokenUnit);
+      const row = cell.closest('tr');
 
       // Clear any existing event listeners by cloning (cleanest way)
       cell.onmouseenter = null;
@@ -1199,6 +1452,10 @@
         const inputCost = convertCostToUnit(pricing.input_cost_per_1m || 0, currentTokenUnit);
         const outputCost = convertCostToUnit(pricing.output_cost_per_1m || 0, currentTokenUnit);
         const totalCost = inputCost + outputCost;
+
+        // Store sortable value on row (use raw per-1M cost for consistent sorting)
+        const rawTotal = (pricing.input_cost_per_1m || 0) + (pricing.output_cost_per_1m || 0);
+        if (row) row._lmarenaPlusPricing = rawTotal;
 
         // New layout: bold total on top, input/output side by side below
         cell.innerHTML = `
@@ -1223,11 +1480,13 @@
         cell.textContent = 'N/A';
         cell.classList.add('lmarena-price-cell--na');
         cell._pricingData = null;
+        if (row) row._lmarenaPlusPricing = null;
       }
     }
 
     _updateEloPerDollarCellContent(cell, modelName, arenaScore) {
       const pricing = this.pricingService.getPricing(modelName);
+      const row = cell.closest('tr');
 
       if (pricing && arenaScore && arenaScore > 1000) {
         const inputCost = pricing.input_cost_per_1m || 0;
@@ -1239,9 +1498,12 @@
           const formattedValue = valueScore.toFixed(1);
           cell.innerHTML = `<span class="lmarena-elopd-value">${formattedValue}</span>`;
           cell.classList.remove('lmarena-elopd-cell--na');
+          // Store sortable value on row
+          if (row) row._lmarenaPlusElopd = valueScore;
         } else {
           cell.textContent = 'N/A';
           cell.classList.add('lmarena-elopd-cell--na');
+          if (row) row._lmarenaPlusElopd = null;
         }
 
         // Store data for tooltip
@@ -1250,10 +1512,12 @@
         cell.textContent = '—';
         cell.classList.add('lmarena-elopd-cell--na');
         cell._eloPerDollarData = null;
+        if (row) row._lmarenaPlusElopd = null;
       } else {
         cell.textContent = 'N/A';
         cell.classList.add('lmarena-elopd-cell--na');
         cell._eloPerDollarData = null;
+        if (row) row._lmarenaPlusElopd = null;
       }
     }
 
@@ -1362,7 +1626,7 @@
   // ============================================
   // Main Initialization
   // ============================================
-  let pricingService, contextService, tooltipManager, loadingManager, columnInjector, tableObserver;
+  let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver;
 
   async function init() {
     console.log('[LMArena Plus] Initializing...');
@@ -1373,7 +1637,8 @@
     contextService = new ContextService();
     tooltipManager = new TooltipManager();
     loadingManager = new LoadingManager();
-    columnInjector = new ColumnInjector(pricingService, contextService, tooltipManager, loadingManager);
+    sortManager = new SortManager();
+    columnInjector = new ColumnInjector(pricingService, contextService, tooltipManager, loadingManager, sortManager);
     tableObserver = new TableObserver(columnInjector);
 
     // Show loading state immediately
