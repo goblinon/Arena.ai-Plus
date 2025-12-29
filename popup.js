@@ -131,6 +131,16 @@
         });
     });
 
+    // Display version number
+    function displayVersion() {
+        const versionSpan = document.getElementById('popup-version');
+        if (versionSpan && chrome.runtime.getManifest) {
+            const manifest = chrome.runtime.getManifest();
+            versionSpan.textContent = `v${manifest.version}`;
+        }
+    }
+
     // Initialize
     loadPreferences();
+    displayVersion();
 })();

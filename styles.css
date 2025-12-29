@@ -18,6 +18,23 @@
   padding: 14px 24px;
 }
 
+/* Ensure header text matches native LMArena headers in both modes */
+html.dark .lmarena-price-header,
+html.dark .lmarena-elopd-header,
+html.dark .lmarena-ctx-header,
+html.dark .lmarena-mod-header,
+html.dark .lmarena-sort-button {
+  color: #fff;
+}
+
+html.light .lmarena-price-header,
+html.light .lmarena-elopd-header,
+html.light .lmarena-ctx-header,
+html.light .lmarena-mod-header,
+html.light .lmarena-sort-button {
+  color: #000;
+}
+
 /* Shared column cell base */
 .lmarena-price-cell,
 .lmarena-elopd-cell,

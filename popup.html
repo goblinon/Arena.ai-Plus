@@ -10,7 +10,7 @@
 
 <body>
   <div class="popup-container">
-    <h1 class="popup-title">LMArena Plus</h1>
+    <h1 class="popup-title">LMArena Plus<span class="popup-version" id="popup-version"></span></h1>
 
     <div class="setting-group">
       <label class="setting-label" for="data-provider">Data Provider:</label>
@@ -40,12 +40,8 @@
             <span class="checkbox-label">Rank Spread</span>
           </label>
           <label class="checkbox-item">
-            <input type="checkbox" id="col-model" data-column="model" checked>
-            <span class="checkbox-label">Model</span>
-          </label>
-          <label class="checkbox-item">
             <input type="checkbox" id="col-arena-score" data-column="arena-score" checked>
-            <span class="checkbox-label">Arena Score</span>
+            <span class="checkbox-label">Score</span>
           </label>
           <label class="checkbox-item">
             <input type="checkbox" id="col-95-ci" data-column="95-ci" checked>
@@ -72,7 +68,7 @@
           </label>
           <label class="checkbox-item">
             <input type="checkbox" id="col-elo-per-dollar" data-column="elo-per-dollar" checked>
-            <span class="checkbox-label">Elo/$</span>
+            <span class="checkbox-label">Bang for Buck</span>
           </label>
           <label class="checkbox-item">
             <input type="checkbox" id="col-context-window" data-column="context-window" checked>

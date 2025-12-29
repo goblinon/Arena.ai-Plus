@@ -1568,8 +1568,8 @@
         const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost);
 
         if (valueScore !== null) {
-          // Format: show score with 1 decimal for cleaner display
-          const formattedValue = valueScore.toFixed(1);
+          // Format: show score as integer for cleaner display
+          const formattedValue = Math.round(valueScore);
           cell.innerHTML = `<span class="lmarena-elopd-value">${formattedValue}</span>`;
           cell.classList.remove('lmarena-elopd-cell--na');
           // Store sortable value on row
