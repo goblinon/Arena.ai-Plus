@@ -87,7 +87,7 @@
   // 0.97 = gentle exponential decay (recommended)
   // 0.95 = moderate decay
   // 0.90 = aggressive decay
-  const RANK_DECAY_BASE = 0.90;
+  const RANK_DECAY_BASE = 0.85;
 
   /**
    * Calculate Value Score using logarithmic price compression with exponential rank penalty
@@ -109,6 +109,7 @@
   function calculateBangForBuck(arenaScore, inputCostPer1M, outputCostPer1M, rank = 1) {
     if (!arenaScore || arenaScore <= ELO_BASELINE) return null; // Need Elo > baseline for positive score
     const blendedPrice = (inputCostPer1M + outputCostPer1M) / 2;
+    if (blendedPrice <= 0) return null; // Free models get N/A (can't calculate value ratio)
     // Base formula: (Elo - baseline) / log(1 + Price)
     const baseScore = (arenaScore - ELO_BASELINE) / Math.log(1 + blendedPrice);
     // Apply exponential rank penalty: multiply by RANK_DECAY_BASE^(rank-1)
