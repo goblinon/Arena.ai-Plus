@@ -1,6 +1,11 @@
-/**
- * LMArena Plus - Popup Script
- * Handles user preferences for token unit display, data provider, and column visibility
+/*
+ * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
+ * Copyright (C) 2025 LMArena Plus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  */
 
 (function () {
@@ -68,7 +73,14 @@
     function updateAttribution(provider) {
         const url = PROVIDER_URLS[provider];
         const name = provider.charAt(0).toUpperCase() + provider.slice(1);
-        attributionDiv.innerHTML = `All data is provided by <a href="${url}" target="_blank">${name === 'Litellm' ? 'LiteLLM' : name}</a>`;
+
+        attributionDiv.textContent = 'All data is provided by ';
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = name === 'Litellm' ? 'LiteLLM' : name;
+
+        attributionDiv.appendChild(link);
     }
 
     // Get current column visibility state

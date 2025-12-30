@@ -1,6 +1,11 @@
-/**
- * LMArena Plus - Content Script
- * Injects pricing information from multiple providers into LMArena leaderboard tables
+/*
+ * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
+ * Copyright (C) 2025 LMArena Plus
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  */
 
 (function () {
