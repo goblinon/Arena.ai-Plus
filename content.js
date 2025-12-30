@@ -73,30 +73,44 @@
   }
 
   // ============================================
-  // Elo per Dollar Helpers (Logarithmic Formula)
+  // Elo per Dollar Helpers (Logarithmic Formula with Rank Penalty)
   // ============================================
   const ELO_BASELINE = 1000;
 
+  // Rank decay base: Each rank gets this % of the previous rank's score
+  // 1.0 = no penalty (all ranks equal)
+  // 0.97 = gentle exponential decay (recommended)
+  // 0.95 = moderate decay
+  // 0.90 = aggressive decay
+  const RANK_DECAY_BASE = 0.90;
+
   /**
-   * Calculate Value Score using logarithmic price compression
-   * Formula: (Elo - baseline) / log(1 + Price)
+   * Calculate Value Score using logarithmic price compression with exponential rank penalty
+   * Formula: (Elo - baseline) / log(1 + Price) × RANK_DECAY_BASE^(rank - 1)
    * 
    * This formula compresses the "price penalty" - for a business, the difference
    * between $5 and $30 is not "6x the pain", it's just a higher tier of operating cost.
    * 
-   * The log(1 + Price) ensures we never divide by zero for free models.
+   * The exponential rank penalty ensures:
+   * - Top ranks (1-10) are penalized gently
+   * - Lower ranks (50+) are penalized more aggressively
    * 
    * @param {number} arenaScore - The model's Arena Score (Elo)
    * @param {number} inputCostPer1M - Input cost per 1M tokens
    * @param {number} outputCostPer1M - Output cost per 1M tokens
+   * @param {number} rank - The model's rank (1 = best, higher = worse)
    * @returns {number|null} - Value score or null if not calculable
    */
-  function calculateEloPerDollar(arenaScore, inputCostPer1M, outputCostPer1M) {
+  function calculateEloPerDollar(arenaScore, inputCostPer1M, outputCostPer1M, rank = 1) {
     if (!arenaScore || arenaScore <= ELO_BASELINE) return null; // Need Elo > baseline for positive score
     const blendedPrice = (inputCostPer1M + outputCostPer1M) / 2;
-    // Formula: (Elo - baseline) / log(1 + Price)
-    const score = (arenaScore - ELO_BASELINE) / Math.log(1 + blendedPrice);
-    return score;
+    // Base formula: (Elo - baseline) / log(1 + Price)
+    const baseScore = (arenaScore - ELO_BASELINE) / Math.log(1 + blendedPrice);
+    // Apply exponential rank penalty: multiply by RANK_DECAY_BASE^(rank-1)
+    // Rank 1 gets full score (1.0), each subsequent rank loses a fixed %
+    const safeRank = Math.max(rank, 1);
+    const rankMultiplier = Math.pow(RANK_DECAY_BASE, safeRank - 1);
+    return baseScore * rankMultiplier;
   }
 
   async function loadPreferences() {
@@ -1147,12 +1161,12 @@
 
       // Update Elo per Dollar cells
       for (const cellData of this.injectedEloPerDollarCells) {
-        const { cell, modelName, arenaScore } = cellData;
+        const { cell, modelName, arenaScore, rank } = cellData;
 
         if (!cell.isConnected) continue;
 
         cell.classList.remove('lmarena-elopd-cell--loading');
-        this._updateEloPerDollarCellContent(cell, modelName, arenaScore);
+        this._updateEloPerDollarCellContent(cell, modelName, arenaScore, rank);
       }
 
       // Update Context Window cells
@@ -1332,11 +1346,21 @@
         arenaScore = parseFloat(scoreText.replace(/[^0-9.-]/g, ''));
       }
 
+      // Extract rank from first column (usually index 0)
+      let rank = 1;
+      if (cells[0]) {
+        const rankText = cells[0].textContent.trim();
+        const parsedRank = parseInt(rankText.replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(parsedRank) && parsedRank > 0) {
+          rank = parsedRank;
+        }
+      }
+
       const td = document.createElement('td');
       td.className = 'lmarena-elopd-cell';
       td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
 
-      this.injectedEloPerDollarCells.push({ cell: td, modelName, arenaScore });
+      this.injectedEloPerDollarCells.push({ cell: td, modelName, arenaScore, rank });
 
       // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
       row.appendChild(td);
@@ -1345,7 +1369,7 @@
         td.textContent = 'Loading';
         td.classList.add('lmarena-elopd-cell--loading');
       } else {
-        this._updateEloPerDollarCellContent(td, modelName, arenaScore);
+        this._updateEloPerDollarCellContent(td, modelName, arenaScore, rank);
       }
     }
 
@@ -1584,14 +1608,14 @@
       }
     }
 
-    _updateEloPerDollarCellContent(cell, modelName, arenaScore) {
+    _updateEloPerDollarCellContent(cell, modelName, arenaScore, rank = 1) {
       const pricing = this.pricingService.getPricing(modelName);
       const row = cell.closest('tr');
 
       if (pricing && arenaScore && arenaScore > 1000) {
         const inputCost = pricing.input_cost_per_1m || 0;
         const outputCost = pricing.output_cost_per_1m || 0;
-        const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost);
+        const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost, rank);
 
         if (valueScore !== null) {
           // Format: show score as integer for cleaner display
@@ -1607,7 +1631,7 @@
         }
 
         // Store data for tooltip
-        cell._eloPerDollarData = { arenaScore, pricing, valueScore };
+        cell._eloPerDollarData = { arenaScore, pricing, valueScore, rank };
       } else if (!arenaScore || arenaScore <= 1000) {
         cell.textContent = '—';
         cell.classList.add('lmarena-elopd-cell--na');
