@@ -41,6 +41,13 @@
     const dataProviderSelect = document.getElementById('data-provider');
     const attributionDiv = document.getElementById('attribution');
     const columnCheckboxes = document.querySelectorAll('.column-picker input[type="checkbox"]');
+    const pricingLabel = document.getElementById('pricing-label');
+
+    // Update pricing label based on token unit
+    function updatePricingLabel(unit) {
+        const label = unit === 1000000 ? 'Pricing per 1M' : 'Pricing per 100K';
+        pricingLabel.textContent = label;
+    }
 
     // Load saved preferences
     async function loadPreferences() {
@@ -49,6 +56,7 @@
 
             const savedUnit = result[TOKEN_UNIT_KEY] || DEFAULT_TOKEN_UNIT;
             tokenUnitSelect.value = savedUnit.toString();
+            updatePricingLabel(savedUnit);
 
             const savedProvider = result[PROVIDER_KEY] || DEFAULT_PROVIDER;
             dataProviderSelect.value = savedProvider;
@@ -125,7 +133,9 @@
 
     // Event listeners
     tokenUnitSelect.addEventListener('change', (e) => {
-        savePreference(TOKEN_UNIT_KEY, parseInt(e.target.value, 10), 'TOKEN_UNIT_CHANGED');
+        const unit = parseInt(e.target.value, 10);
+        updatePricingLabel(unit);
+        savePreference(TOKEN_UNIT_KEY, unit, 'TOKEN_UNIT_CHANGED');
     });
 
     dataProviderSelect.addEventListener('change', async (e) => {
