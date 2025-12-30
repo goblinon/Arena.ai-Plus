@@ -1,8 +1,8 @@
-# 💎 LMArena Plus
+# LMArena Plus
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
-[![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE平衡)
+[![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
 **LMArena Plus** is a powerful Chrome Extension that enhances the [LMArena (Chatbot Arena)](https://chat.lmsys.org/?leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
 
@@ -12,9 +12,10 @@
 
 ### 💰 Real-Time Pricing Integration
 Stop guessing what your favorite models cost. LMArena Plus injects a "Pricing" column directly into the leaderboard, pulling fresh data from top providers:
-- **OpenRouter** (Default)
+- **OpenRouter**
 - **Helicone**
 - **LiteLLM**
+
 *Switch providers or toggle token units (1M, 100K, 1K) seamlessly via the extension popup.*
 
 ### 🚀 "Bang for Buck" Index
@@ -58,6 +59,10 @@ We believe that intelligence shouldn't always come at a premium. Our algorithm c
 ## 🤝 Contributing
 
 Feel free to open issues or submit pull requests if you have ideas for new features or data sources!
+
+## ✨ License
+
+Distributed under the GPLv3 License. See `LICENSE` for more information.
 
 ---
 
