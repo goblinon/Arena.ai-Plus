@@ -22,10 +22,10 @@ body {
 }
 
 .popup-container {
-    padding: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .popup-title {
@@ -33,10 +33,10 @@ body {
     font-family: 'Merriweather', serif;
     font-style: italic;
     font-weight: 500;
-    font-size: 20px;
+    font-size: 18px;
     color: #00FF41;
     text-align: center;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #333;
     line-height: 1.2;
     letter-spacing: 1px;
@@ -55,7 +55,7 @@ body {
 .setting-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .setting-row {
@@ -84,8 +84,8 @@ body {
 
 .setting-select {
     width: 100%;
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 8px 10px;
+    font-size: 13px;
     background: #2a2a4e;
     color: #fff;
     border: 1px solid #3a3a5e;
@@ -116,8 +116,8 @@ body {
 
 .donate-button {
     flex: 1;
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 8px 10px;
+    font-size: 12px;
     font-weight: 500;
     text-decoration: none;
     color: #fff;
@@ -126,14 +126,9 @@ body {
     border-radius: 6px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .donate-button:hover {
@@ -147,8 +142,8 @@ body {
 
 .github-button {
     flex: 1;
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 8px 10px;
+    font-size: 12px;
     font-weight: 500;
     text-decoration: none;
     color: #a0a0a0;
@@ -157,7 +152,6 @@ body {
     border-radius: 6px;
     cursor: pointer;
     transition: color 0.2s, border-color 0.2s;
-
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
@@ -221,11 +215,11 @@ body {
 .column-picker {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     background: #2a2a4e;
     border: 1px solid #3a3a5e;
     border-radius: 6px;
-    padding: 12px;
+    padding: 10px;
 }
 
 .plus-badge {
@@ -238,9 +232,9 @@ body {
 .checkbox-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    padding: 4px 0;
+    padding: 2px 0;
     transition: opacity 0.2s;
 }
 

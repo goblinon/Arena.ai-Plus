@@ -19,7 +19,7 @@ const COLUMN_TOOLTIPS = {
     },
     'bang-for-buck': {
         title: 'Bang for Buck',
-        description: 'A value index that finds the smartest models for the lowest price. Higher is better.'
+        description: 'Measures how much intelligence you get for your money. Balances Arena Score against price, with a bonus for top-ranked models. Higher values = better value.'
     },
     'context-window': {
         title: 'Context Size',

@@ -1,6 +1,6 @@
 # LMArena Plus
 
-[![Version](https://img.shields.io/badge/version-1.5.4-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
@@ -16,7 +16,7 @@ Stop guessing what your favorite models cost. LMArena Plus injects a "Pricing" c
 - **Helicone**
 - **LiteLLM**
 
-*Switch providers or toggle token units (1M, 100K, 1K) seamlessly via the extension popup.*
+*Switch providers or toggle token units (1M, 100K) seamlessly via the extension popup.*
 
 ### 🚀 "Bang for Buck" Index
 Our specialized value metric helps you find the "sweet spot" of intelligence vs. cost. 

@@ -64,7 +64,6 @@
     switch (unit) {
       case 1000000: return '1M';
       case 100000: return '100K';
-      case 1000: return '1K';
       default: return '1M';
     }
   }
@@ -239,7 +238,7 @@
     modHeaders.forEach(el => el.style.display = modVisible ? '' : 'none');
     modCells.forEach(el => el.style.display = modVisible ? '' : 'none');
 
-    console.log('[LMArena Plus] Column visibility updated');
+
   }
 
   // ============================================
@@ -466,7 +465,7 @@
 
     async initialize() {
       this.isLoading = true;
-      console.log('[LMArena Plus] Fetching context data from OpenRouter...');
+
       await this._fetchContextData();
       this.isLoading = false;
     }
@@ -478,7 +477,7 @@
 
         const data = await response.json();
         this._buildContextMap(data);
-        console.log(`[LMArena Plus] Loaded context data for ${this.contextMap.size} models from OpenRouter`);
+
       } catch (error) {
         console.error('[LMArena Plus] Failed to fetch context data from OpenRouter:', error);
       }
@@ -530,13 +529,13 @@
       this.currentProvider = provider;
       this.isLoading = true;
 
-      console.log(`[LMArena Plus] Fetching data from ${provider}...`);
+
       await this._fetchPricing(provider);
       this.isLoading = false;
     }
 
     async switchProvider(provider) {
-      console.log(`[LMArena Plus] Switching to provider: ${provider}`);
+
       this.pricingMap.clear();
       this.currentProvider = provider;
       await this.initialize(provider);
@@ -552,7 +551,7 @@
 
         const data = await response.json();
         this._buildPricingMap(data, provider);
-        console.log(`[LMArena Plus] Loaded ${this.pricingMap.size} models from ${provider}`);
+
       } catch (error) {
         console.error(`[LMArena Plus] Failed to fetch pricing from ${provider}:`, error);
       }
@@ -573,7 +572,7 @@
           break;
       }
 
-      console.log(`[LMArena Plus] Built pricing map with ${this.pricingMap.size} entries`);
+
     }
 
     _buildHeliconeMap(data) {
@@ -801,7 +800,8 @@
       const tooltipRect = this.tooltip.getBoundingClientRect();
 
       let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-      let top = rect.bottom + 8;
+      // Position above the element by default
+      let top = rect.top - tooltipRect.height - 8;
 
       const padding = 10;
       if (left < padding) left = padding;
@@ -809,8 +809,9 @@
         left = window.innerWidth - tooltipRect.width - padding;
       }
 
-      if (top + tooltipRect.height > window.innerHeight - padding) {
-        top = rect.top - tooltipRect.height - 8;
+      // Fallback to below if not enough space above
+      if (top < padding) {
+        top = rect.bottom + 8;
       }
 
       this.tooltip.style.left = `${left}px`;
@@ -978,18 +979,18 @@
 
     _sortTable(columnType, direction) {
       const tables = document.querySelectorAll('table');
-      console.log(`[LMArena Plus Sort] Sorting by ${columnType} ${direction}, found ${tables.length} tables`);
+
 
       tables.forEach((table, tableIdx) => {
         const tbody = table.querySelector('tbody');
         if (!tbody) {
-          console.log(`[LMArena Plus Sort] Table ${tableIdx}: no tbody`);
+
           return;
         }
 
         const rows = Array.from(tbody.querySelectorAll('tr'));
         if (rows.length === 0) {
-          console.log(`[LMArena Plus Sort] Table ${tableIdx}: no rows`);
+
           return;
         }
 
@@ -1005,11 +1006,11 @@
 
         // Debug: check how many rows have values
         const rowsWithValues = rows.filter(r => r[valueKey] != null).length;
-        console.log(`[LMArena Plus Sort] Table ${tableIdx}: ${rows.length} rows, ${rowsWithValues} have ${valueKey} values`);
+
 
         // Debug: log first few row values
         rows.slice(0, 5).forEach((row, idx) => {
-          console.log(`[LMArena Plus Sort] Row ${idx}: ${valueKey}=${row[valueKey]}`);
+
         });
 
         // Sort rows
@@ -1028,7 +1029,7 @@
 
         // Re-append rows in sorted order
         rows.forEach(row => tbody.appendChild(row));
-        console.log(`[LMArena Plus Sort] Table ${tableIdx}: sorting complete`);
+
       });
     }
 
@@ -1084,10 +1085,10 @@
 
     injectIntoTable(table, showLoading = false) {
       const headerRow = this._findHeaderRow(table);
-      if (!headerRow) return;
+      if (!headerRow) return 0;
 
       const modelColumnIndex = this._findModelColumnIndex(headerRow);
-      if (modelColumnIndex === -1) return;
+      if (modelColumnIndex === -1) return 0;
 
       const arenaScoreColumnIndex = this._findArenaScoreColumnIndex(headerRow);
 
@@ -1108,23 +1109,37 @@
         this._injectModalitiesHeader(headerRow, showLoading);
       }
 
-      this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+      return this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
     }
 
 
     _processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
       const rows = table.querySelectorAll('tbody tr, tr');
+      let newRowCount = 0;
 
       rows.forEach(row => {
         if (row.querySelector('th')) return;
         if (row.hasAttribute(CONFIG.ROW_MARKER)) return;
 
+        newRowCount++;
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
         this._injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
         this._injectContextWindowCell(row, modelColumnIndex, showLoading);
         this._injectModalitiesCell(row, modelColumnIndex, showLoading);
       });
+
+      return newRowCount;
+    }
+
+    updatePricingHeader() {
+      if (this.pricingHeaderButton && this.pricingHeaderButton.isConnected) {
+        const unitLabel = getTokenUnitLabel(currentTokenUnit);
+        // Preserve the current sort icon state
+        const iconContainer = this.pricingHeaderButton.querySelector('.lmarena-sort-icon-container');
+        const currentIcon = iconContainer ? iconContainer.innerHTML : SORT_ICONS.default;
+        this.pricingHeaderButton.innerHTML = `Pricing per ${unitLabel} <span class="lmarena-sort-icon-container">${currentIcon}</span>`;
+      }
     }
 
     updateAllCells() {
@@ -1147,6 +1162,9 @@
         this._updateBfbCellContent(cell, modelName, arenaScore, rank);
       }
 
+      // Add medal emojis to top 3 BfB cells per table
+      this._addBfbMedals();
+
       // Update Context Window cells
       for (const cellData of this.injectedContextWindowCells) {
         const { cell, modelName } = cellData;
@@ -1165,6 +1183,55 @@
 
         cell.classList.remove('lmarena-mod-cell--loading');
         this._updateModalitiesCellContent(cell, modelName);
+      }
+    }
+
+    _addBfbMedals() {
+      const MEDALS = ['🥇', '🥈', '🥉'];
+      const MEDAL_REGEX = /^[🥇🥈🥉]\s*/;
+
+      // Group BfB cells by their parent table
+      const tableGroups = new Map();
+
+      for (const cellData of this.injectedBfbCells) {
+        const { cell } = cellData;
+        if (!cell.isConnected) continue;
+
+        const table = cell.closest('table');
+        if (!table) continue;
+
+        const row = cell.closest('tr');
+        const bfbValue = row?._lmarenaPlusBfb;
+
+        // Strip any existing medal from this cell first
+        const valueSpan = cell.querySelector('.lmarena-bfb-value');
+        if (valueSpan) {
+          valueSpan.innerHTML = valueSpan.innerHTML.replace(MEDAL_REGEX, '');
+        }
+
+        // Only consider cells with valid BfB values
+        if (bfbValue !== null && bfbValue !== undefined && !isNaN(bfbValue)) {
+          if (!tableGroups.has(table)) {
+            tableGroups.set(table, []);
+          }
+          tableGroups.set(table, [...tableGroups.get(table), { cell, value: bfbValue }]);
+        }
+      }
+
+      // For each table, find top 3 and add medals
+      for (const [table, cells] of tableGroups) {
+        // Sort by BfB value descending
+        cells.sort((a, b) => b.value - a.value);
+
+        // Add medals to top 3
+        for (let i = 0; i < Math.min(3, cells.length); i++) {
+          const { cell } = cells[i];
+          const valueSpan = cell.querySelector('.lmarena-bfb-value');
+          if (valueSpan) {
+            // Prepend medal emoji
+            valueSpan.innerHTML = `${MEDALS[i]} ${valueSpan.innerHTML}`;
+          }
+        }
       }
     }
 
@@ -1240,11 +1307,15 @@
       const th = document.createElement('th');
       th.className = 'lmarena-price-header';
 
-      // Create sortable button
+      // Create sortable button with dynamic label
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
-      button.innerHTML = `Pricing <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      const unitLabel = getTokenUnitLabel(currentTokenUnit);
+      button.innerHTML = `Pricing per ${unitLabel} <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('pricing'));
+
+      // Store reference to the button for dynamic updates
+      this.pricingHeaderButton = button;
 
       // Add tooltip hover
       th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'pricing'));
@@ -1692,14 +1763,21 @@
 
     _processAllTables(showLoading = false) {
       const tables = document.querySelectorAll('table');
+      let totalNewRows = 0;
+
       tables.forEach(table => {
         if (this._isLeaderboardTable(table)) {
-          this.columnInjector.injectIntoTable(table, showLoading);
+          totalNewRows += this.columnInjector.injectIntoTable(table, showLoading);
         }
       });
+
       // Apply column visibility to new rows
+      // Only add medals if new rows were actually processed (not just sorting)
       if (!showLoading) {
         applyColumnVisibility();
+        if (totalNewRows > 0) {
+          this.columnInjector._addBfbMedals();
+        }
       }
     }
 
@@ -1727,7 +1805,7 @@
   let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver;
 
   async function init() {
-    console.log('[LMArena Plus] Initializing...');
+
 
     await loadPreferences();
 
@@ -1748,7 +1826,7 @@
       pricingService.initialize(currentProvider),
       contextService.initialize()
     ]);
-    console.log(`[LMArena Plus] Pricing loaded from ${currentProvider}, context always from OpenRouter`);
+
 
     // Update cells with actual data
     columnInjector.updateAllCells();
@@ -1758,28 +1836,29 @@
 
     // Start observing for new tables and rows
     tableObserver.start();
-    console.log('[LMArena Plus] Ready');
+
 
     // Listen for preference changes from popup
     chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       if (message.type === 'TOKEN_UNIT_CHANGED') {
         currentTokenUnit = message.value;
+        columnInjector.updatePricingHeader();
         columnInjector.updateAllCells();
-        console.log('[LMArena Plus] Token unit updated to:', currentTokenUnit);
+
       } else if (message.type === 'PROVIDER_CHANGED') {
         currentProvider = message.value;
-        console.log('[LMArena Plus] Switching provider to:', currentProvider);
+
 
         columnInjector.setAllCellsLoading();
         await pricingService.switchProvider(currentProvider);
         columnInjector.updateAllCells();
         applyColumnVisibility();
 
-        console.log('[LMArena Plus] Provider switched successfully');
+
       } else if (message.type === 'COLUMN_VISIBILITY_CHANGED') {
         currentColumnVisibility = message.value;
         applyColumnVisibility();
-        console.log('[LMArena Plus] Column visibility updated:', currentColumnVisibility);
+
       }
     });
   }
