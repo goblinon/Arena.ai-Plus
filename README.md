@@ -1,10 +1,10 @@
 # LMArena Plus
 
-[![Version](https://img.shields.io/badge/version-1.5.2-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.5.3-blue.svg)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
-**LMArena Plus** is a powerful Chrome Extension that enhances the [LMArena (Chatbot Arena)](https://chat.lmsys.org/?leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
+**LMArena Plus** is a powerful Chrome Extension that enhances the [LMArena (Chatbot Arena)](https://lmarena.ai/leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
 
 ---
 
@@ -29,9 +29,9 @@ Our specialized value metric helps you find the "sweet spot" of intelligence vs.
 - **Native Sorting**: All injected columns (Pricing, Value, Context) are fully sortable, integrating perfectly with LMArena's native table controls.
 
 ### 🎨 Seamless UI Integration
-LMArena Plus is designed to feel like a native part of the site. It supports:
 - **Light & Dark Mode**: Modality icons and price cells adapt automatically.
 - **Smart Tooltips**: Detailed cost breakdowns (Input vs. Output) appear on hover.
+- **Column Picker**: Total control over your leaderboard. Toggle any column (both native and Plus) on or off via the extension popup to keep your view clean and focused.
 
 ---
 
@@ -43,7 +43,7 @@ Currently in developer preview. To install:
 2. Open Chrome and navigate to `chrome://extensions/`.
 3. Enable **"Developer mode"** in the top-right corner.
 4. Click **"Load unpacked"** and select the folder containing this project.
-5. Visit [LMArena](https://chat.lmsys.org/?leaderboard) and enjoy!
+5. Visit [LMArena](https://lmarena.ai/leaderboard) and enjoy!
 
 ---
 
