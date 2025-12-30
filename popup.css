@@ -15,8 +15,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
-    color: #e0e0e0;
+    background: linear-gradient(135deg, var(--lmp-bg-dark) 0%, var(--lmp-bg-dark-alt) 100%);
+    color: var(--lmp-text-secondary);
     min-width: 320px;
     padding: 0;
 }
@@ -34,10 +34,10 @@ body {
     font-style: italic;
     font-weight: 500;
     font-size: 18px;
-    color: #00FF41;
+    color: var(--lmp-accent-green);
     text-align: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--lmp-border-dark);
     line-height: 1.2;
     letter-spacing: 1px;
 }
@@ -48,7 +48,7 @@ body {
     bottom: 14px;
     font-size: 11px;
     font-weight: 400;
-    color: #888;
+    color: var(--lmp-text-subtle);
     line-height: 1;
 }
 
@@ -72,23 +72,23 @@ body {
 
 .setting-field-label {
     font-size: 11px;
-    color: #888;
+    color: var(--lmp-text-subtle);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .setting-label {
     font-size: 13px;
-    color: #a0a0a0;
+    color: var(--lmp-text-muted);
 }
 
 .setting-select {
     width: 100%;
     padding: 8px 10px;
     font-size: 13px;
-    background: #2a2a4e;
-    color: #fff;
-    border: 1px solid #3a3a5e;
+    background: var(--lmp-bg-surface);
+    color: var(--lmp-text-primary);
+    border: 1px solid var(--lmp-border);
     border-radius: 6px;
     cursor: pointer;
     outline: none;
@@ -96,17 +96,17 @@ body {
 }
 
 .setting-select:hover {
-    border-color: #4a4a7e;
+    border-color: var(--lmp-bg-surface-hover);
 }
 
 .setting-select:focus {
-    border-color: #00FF41;
-    box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.2);
+    border-color: var(--lmp-accent-green);
+    box-shadow: 0 0 0 2px var(--lmp-focus-glow);
 }
 
 .setting-select option {
-    background: #2a2a4e;
-    color: #fff;
+    background: var(--lmp-bg-surface);
+    color: var(--lmp-text-primary);
 }
 
 .button-row {
@@ -120,8 +120,8 @@ body {
     font-size: 12px;
     font-weight: 500;
     text-decoration: none;
-    color: #fff;
-    background: linear-gradient(135deg, #2a3c4e 0%, #00cc33 100%);
+    color: var(--lmp-text-primary);
+    background: linear-gradient(135deg, #2a3c4e 0%, var(--lmp-accent-green-dark) 100%);
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -133,7 +133,7 @@ body {
 
 .donate-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 255, 65, 0.3);
+    box-shadow: 0 4px 12px var(--lmp-shadow-glow);
 }
 
 .donate-button:active {
@@ -146,9 +146,9 @@ body {
     font-size: 12px;
     font-weight: 500;
     text-decoration: none;
-    color: #a0a0a0;
+    color: var(--lmp-text-muted);
     background: transparent;
-    border: 1px solid #3a3a5e;
+    border: 1px solid var(--lmp-border);
     border-radius: 6px;
     cursor: pointer;
     transition: color 0.2s, border-color 0.2s;
@@ -177,8 +177,8 @@ body {
 }
 
 .github-button:hover {
-    color: #fff;
-    border-color: #5a5a8e;
+    color: var(--lmp-text-primary);
+    border-color: var(--lmp-border-hover);
 }
 
 .donate-icon {
@@ -196,14 +196,14 @@ body {
 
 .attribution {
     font-size: 11px;
-    color: #666;
+    color: var(--lmp-text-disabled);
     text-align: center;
     padding-top: 8px;
-    border-top: 1px solid #3a3a5e;
+    border-top: 1px solid var(--lmp-border);
 }
 
 .attribution a {
-    color: #00FF41;
+    color: var(--lmp-accent-green);
     text-decoration: none;
 }
 
@@ -216,8 +216,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: #2a2a4e;
-    border: 1px solid #3a3a5e;
+    background: var(--lmp-bg-surface);
+    border: 1px solid var(--lmp-border);
     border-radius: 6px;
     padding: 10px;
     overflow: visible;
@@ -226,7 +226,7 @@ body {
 .plus-badge {
     font-size: 10px;
     font-weight: 600;
-    color: #00FF41;
+    color: var(--lmp-accent-green);
     margin-left: 4px;
 }
 
@@ -246,13 +246,13 @@ body {
 .checkbox-item input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: #00FF41;
+    accent-color: var(--lmp-accent-green);
     cursor: pointer;
     margin: 0;
 }
 
 .checkbox-label {
     font-size: 13px;
-    color: #e0e0e0;
+    color: var(--lmp-text-secondary);
     user-select: none;
 }

@@ -9,7 +9,43 @@
  */
 
 /* ============================================ */
-/* Shared Column Styles (Base Classes) */
+/* Color Palette - Single Source of Truth      */
+/* ============================================ */
+
+:root {
+  /* Accent colors */
+  --lmp-accent-green: #00FF41;
+  --lmp-accent-green-dark: #00cc33;
+  --lmp-accent-blue: #60a5fa;
+  --lmp-accent-purple: #a78bfa;
+
+  /* Background colors */
+  --lmp-bg-dark: #121212;
+  --lmp-bg-dark-alt: #1a1a1a;
+  --lmp-bg-surface: #2a2a4e;
+  --lmp-bg-surface-hover: #4a4a7e;
+
+  /* Border colors */
+  --lmp-border: #3a3a5e;
+  --lmp-border-dark: #333;
+  --lmp-border-hover: #5a5a8e;
+
+  /* Text colors */
+  --lmp-text-primary: #fff;
+  --lmp-text-secondary: #e0e0e0;
+  --lmp-text-muted: #a0a0a0;
+  --lmp-text-subtle: #888;
+  --lmp-text-disabled: #666;
+
+  /* Hover effect */
+  --lmp-hover-glow: rgba(0, 255, 65, 0.05);
+  --lmp-focus-glow: rgba(0, 255, 65, 0.2);
+  --lmp-shadow: rgba(0, 0, 0, 0.6);
+  --lmp-shadow-glow: rgba(0, 255, 65, 0.3);
+}
+
+/* ============================================ */
+/* Shared Column Styles (Base Classes)         */
 /* ============================================ */
 
 /* Shared column header base */
@@ -32,7 +68,7 @@ html.dark .lmarena-bfb-header,
 html.dark .lmarena-ctx-header,
 html.dark .lmarena-mod-header,
 html.dark .lmarena-sort-button {
-  color: #fff;
+  color: var(--lmp-text-primary);
 }
 
 html.light .lmarena-price-header,
@@ -63,7 +99,7 @@ html.light .lmarena-sort-button {
 .lmarena-bfb-cell:hover,
 .lmarena-ctx-cell:hover,
 .lmarena-mod-cell:hover {
-  background-color: rgba(0, 255, 65, 0.05);
+  background-color: var(--lmp-hover-glow);
 }
 
 /* Shared N/A state */
@@ -71,7 +107,7 @@ html.light .lmarena-sort-button {
 .lmarena-bfb-cell--na,
 .lmarena-ctx-cell--na,
 .lmarena-mod-cell--na {
-  color: #888;
+  color: var(--lmp-text-subtle);
   font-style: italic;
 }
 
@@ -80,7 +116,7 @@ html.light .lmarena-sort-button {
 .lmarena-bfb-cell--loading,
 .lmarena-ctx-cell--loading,
 .lmarena-mod-cell--loading {
-  color: #666;
+  color: var(--lmp-text-disabled);
 }
 
 /* Shared loading spinner base */
@@ -93,7 +129,7 @@ html.light .lmarena-sort-button {
   width: 14px;
   height: 14px;
   margin-left: 6px;
-  border: 2px solid #3a3a5e;
+  border: 2px solid var(--lmp-border);
   border-radius: 50%;
   animation: lmarena-spin 0.8s linear infinite;
   vertical-align: middle;
@@ -102,17 +138,17 @@ html.light .lmarena-sort-button {
 /* Loading spinner accent colors */
 .lmarena-price-cell--loading::after,
 .lmarena-bfb-cell--loading::after {
-  border-top-color: #00FF41;
+  border-top-color: var(--lmp-accent-green);
   /* Green */
 }
 
 .lmarena-ctx-cell--loading::after {
-  border-top-color: #60a5fa;
+  border-top-color: var(--lmp-accent-blue);
   /* Blue */
 }
 
 .lmarena-mod-cell--loading::after {
-  border-top-color: #a78bfa;
+  border-top-color: var(--lmp-accent-purple);
   /* Purple */
 }
 
@@ -190,7 +226,7 @@ html.light .lmarena-sort-button {
 
 .lmarena-price-breakdown {
   font-size: 11px;
-  color: #888;
+  color: var(--lmp-text-subtle);
   line-height: 1.2;
   margin-top: 2px;
 }
@@ -211,7 +247,7 @@ table td.lmarena-price-cell {
 
 .lmarena-bfb-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: #00FF41;
+  color: var(--lmp-accent-green);
   font-weight: 600;
 }
 
@@ -231,7 +267,7 @@ table td.lmarena-bfb-cell {
 
 .lmarena-ctx-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: #60a5fa;
+  color: var(--lmp-accent-blue);
   font-weight: 600;
 }
 
@@ -299,14 +335,14 @@ table td.lmarena-mod-cell {
 .lmarena-price-tooltip {
   position: fixed;
   z-index: 10000;
-  background: #121212;
-  border: 1px solid #333;
+  background: var(--lmp-bg-dark);
+  border: 1px solid var(--lmp-border-dark);
   border-radius: 8px;
   padding: 12px 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 20px var(--lmp-shadow);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
-  color: #e0e0e0;
+  color: var(--lmp-text-secondary);
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
@@ -324,10 +360,10 @@ table td.lmarena-mod-cell {
 .lmarena-price-tooltip__model-name {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--lmp-text-primary);
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--lmp-border-dark);
   word-break: break-word;
 }
 
@@ -346,26 +382,26 @@ table td.lmarena-mod-cell {
 }
 
 .lmarena-price-tooltip__label {
-  color: #a0a0a0;
+  color: var(--lmp-text-muted);
 }
 
 .lmarena-price-tooltip__value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: #00FF41;
+  color: var(--lmp-accent-green);
 }
 
 .lmarena-price-tooltip__source {
   font-size: 11px;
-  color: #666;
+  color: var(--lmp-text-disabled);
   text-align: left;
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--lmp-border-dark);
 }
 
 .lmarena-price-tooltip__explanation {
   font-size: 12.5px;
-  color: #888;
+  color: var(--lmp-text-subtle);
   margin-bottom: 10px;
   font-style: italic;
 }

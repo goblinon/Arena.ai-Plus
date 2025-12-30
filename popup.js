@@ -71,16 +71,24 @@
 
     // Update attribution based on selected provider
     function updateAttribution(provider) {
-        const url = PROVIDER_URLS[provider];
-        const name = provider.charAt(0).toUpperCase() + provider.slice(1);
-
         attributionDiv.textContent = 'All data is provided by ';
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.textContent = name === 'Litellm' ? 'LiteLLM' : name;
 
-        attributionDiv.appendChild(link);
+        // Always show OpenRouter first
+        const openRouterLink = document.createElement('a');
+        openRouterLink.href = PROVIDER_URLS.openrouter;
+        openRouterLink.target = '_blank';
+        openRouterLink.textContent = 'OpenRouter';
+        attributionDiv.appendChild(openRouterLink);
+
+        // Add secondary provider if not OpenRouter
+        if (provider !== 'openrouter') {
+            attributionDiv.appendChild(document.createTextNode(', '));
+            const secondaryLink = document.createElement('a');
+            secondaryLink.href = PROVIDER_URLS[provider];
+            secondaryLink.target = '_blank';
+            secondaryLink.textContent = provider === 'litellm' ? 'LiteLLM' : 'Helicone';
+            attributionDiv.appendChild(secondaryLink);
+        }
     }
 
     // Get current column visibility state
