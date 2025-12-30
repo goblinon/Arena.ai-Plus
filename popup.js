@@ -167,9 +167,13 @@
             `;
             tooltip.classList.add('lmarena-price-tooltip--visible');
 
+            // Position above the element (like the rest of the extension)
             const rect = el.getBoundingClientRect();
             tooltip.style.left = `${rect.left}px`;
-            tooltip.style.top = `${rect.bottom + 6}px`;
+            // First render to get tooltip dimensions
+            tooltip.style.top = '0px';
+            const tooltipHeight = tooltip.offsetHeight;
+            tooltip.style.top = `${rect.top - tooltipHeight - 6}px`;
         });
 
         el.addEventListener('mouseleave', () => {

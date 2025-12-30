@@ -1,6 +1,6 @@
 # LMArena Plus
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgoblinon%2FLMArena-Plus%2Fmain%2Fmanifest.json&query=%24.version&label=version&color=blue)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 

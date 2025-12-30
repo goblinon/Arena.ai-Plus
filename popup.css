@@ -220,6 +220,7 @@ body {
     border: 1px solid #3a3a5e;
     border-radius: 6px;
     padding: 10px;
+    overflow: visible;
 }
 
 .plus-badge {
