@@ -150,6 +150,34 @@
             versionSpan.textContent = `v${manifest.version}`;
         }
     }
+    // Minimal tooltip handler (uses shared CSS from styles.css and data from shared.js)
+    const tooltip = document.getElementById('popup-tooltip');
+    let hideTimeout;
+
+    document.querySelectorAll('[data-tooltip]').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+            const key = el.dataset.tooltip;
+            const info = COLUMN_TOOLTIPS[key];
+            if (!info) return;
+
+            tooltip.innerHTML = `
+                <div class="lmarena-price-tooltip__total">${info.title}</div>
+                <div class="lmarena-price-tooltip__explanation">${info.description}</div>
+            `;
+            tooltip.classList.add('lmarena-price-tooltip--visible');
+
+            const rect = el.getBoundingClientRect();
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 6}px`;
+        });
+
+        el.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                tooltip.classList.remove('lmarena-price-tooltip--visible');
+            }, 100);
+        });
+    });
 
     // Initialize
     loadPreferences();

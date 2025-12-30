@@ -18,6 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@1,18..144,500&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 
@@ -26,21 +27,25 @@
     <h1 class="popup-title">LMArena Plus<span class="popup-version" id="popup-version"></span></h1>
 
     <div class="setting-group">
-      <label class="setting-label" for="data-provider">Data Provider:</label>
-      <select id="data-provider" class="setting-select">
-        <option value="openrouter">OpenRouter</option>
-        <option value="litellm">LiteLLM</option>
-        <option value="helicone">Helicone</option>
-      </select>
-    </div>
-
-    <div class="setting-group">
-      <label class="setting-label" for="token-unit">Price per tokens:</label>
-      <select id="token-unit" class="setting-select">
-        <option value="1000000">1M tokens</option>
-        <option value="100000">100K tokens</option>
-        <option value="1000">1K tokens</option>
-      </select>
+      <label class="setting-label">Pricing Column:</label>
+      <div class="setting-row">
+        <div class="setting-field">
+          <span class="setting-field-label">Source</span>
+          <select id="data-provider" class="setting-select">
+            <option value="openrouter">OpenRouter</option>
+            <option value="litellm">LiteLLM</option>
+            <option value="helicone">Helicone</option>
+          </select>
+        </div>
+        <div class="setting-field">
+          <span class="setting-field-label">Price per Tokens</span>
+          <select id="token-unit" class="setting-select">
+            <option value="1000000">1M tokens</option>
+            <option value="100000">100K tokens</option>
+            <option value="1000">1K tokens</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="setting-group">
@@ -70,34 +75,39 @@
           <input type="checkbox" id="col-license" data-column="license" checked>
           <span class="checkbox-label">License</span>
         </label>
-        <label class="checkbox-item">
+        <label class="checkbox-item" data-tooltip="pricing">
           <input type="checkbox" id="col-pricing" data-column="pricing" checked>
           <span class="checkbox-label">Pricing <span class="plus-badge">Plus</span></span>
         </label>
-        <label class="checkbox-item">
+        <label class="checkbox-item" data-tooltip="elo-per-dollar">
           <input type="checkbox" id="col-elo-per-dollar" data-column="elo-per-dollar" checked>
           <span class="checkbox-label">Bang for Buck <span class="plus-badge">Plus</span></span>
         </label>
-        <label class="checkbox-item">
+        <label class="checkbox-item" data-tooltip="context-window">
           <input type="checkbox" id="col-context-window" data-column="context-window" checked>
           <span class="checkbox-label">Context Size <span class="plus-badge">Plus</span></span>
         </label>
-        <label class="checkbox-item">
+        <label class="checkbox-item" data-tooltip="modalities">
           <input type="checkbox" id="col-modalities" data-column="modalities" checked>
           <span class="checkbox-label">Modalities <span class="plus-badge">Plus</span></span>
         </label>
       </div>
     </div>
 
-    <a href="https://ko-fi.com/lmarenaplus" target="_blank" class="donate-button">
-      Love LMArena Plus? Donate to keep the project alive!
-    </a>
+    <div class="button-row">
+      <a href="https://ko-fi.com/lmarenaplus" target="_blank" class="donate-button"><img src="icons/kofi_symbol.svg"
+          class="donate-icon" alt="Ko-fi"> <span>Donate</span></a>
+      <a href="https://github.com/goblinon/LMArena-Plus" target="_blank" class="github-button"><img
+          src="icons/github-mark.svg" class="github-icon" alt="GitHub"> <span>GitHub</span></a>
+    </div>
 
     <div class="attribution" id="attribution">
       All data is provided by <a href="https://helicone.ai" target="_blank">helicone.ai</a>
     </div>
   </div>
 
+  <div class="lmarena-price-tooltip" id="popup-tooltip"></div>
+  <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>
 

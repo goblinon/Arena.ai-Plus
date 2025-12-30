@@ -830,30 +830,7 @@
       const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
 
       this.showTimeout = setTimeout(() => {
-        const headerInfo = {
-          pricing: {
-            title: 'Pricing',
-            description: 'Cost per token to use this model',
-            details: 'Shows combined input + output cost, with breakdown below'
-          },
-          elopd: {
-            title: 'Bang for Buck',
-            description: 'A value index that finds the smartest models for the lowest price.',
-            details: 'Higher is better. It rewards intelligence and affordability, while giving a "quality bonus" to top-ranked models to ensure you get elite performance for your money.'
-          },
-          ctx: {
-            title: 'Context Size',
-            description: 'Maximum tokens the model can process',
-            details: 'Larger context = can handle longer conversations or documents'
-          },
-          mod: {
-            title: 'Modalities',
-            description: 'Data types the model can handle',
-            details: 'Top row: inputs accepted. Bottom row: outputs generated'
-          }
-        };
-
-        const info = headerInfo[columnType];
+        const info = COLUMN_TOOLTIPS[columnType];
         if (!info) return;
 
         this.tooltip.innerHTML = `
@@ -862,11 +839,6 @@
           </div>
           <div class="lmarena-price-tooltip__explanation">
             ${info.description}
-          </div>
-          <div class="lmarena-price-tooltip__breakdown">
-            <div class="lmarena-price-tooltip__row">
-              <span class="lmarena-price-tooltip__label">${info.details}</span>
-            </div>
           </div>
           <div class="lmarena-price-tooltip__source">Click to sort (where available)</div>
         `;

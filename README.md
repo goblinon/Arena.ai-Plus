@@ -1,6 +1,6 @@
 # LMArena Plus
 
-[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
