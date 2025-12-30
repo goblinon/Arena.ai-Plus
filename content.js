@@ -833,8 +833,8 @@
           },
           elopd: {
             title: 'Bang for Buck',
-            description: 'Performance relative to cost',
-            details: 'Higher = better value. Compares Arena Score against price'
+            description: 'A value index that finds the smartest models for the lowest price.',
+            details: 'Higher is better. It rewards intelligence and affordability, while giving a "quality bonus" to top-ranked models to ensure you get elite performance for your money.'
           },
           ctx: {
             title: 'Context Size',
