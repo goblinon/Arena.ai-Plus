@@ -46,7 +46,7 @@
       'organization': true,
       'license': true,
       'pricing': true,
-      'elo-per-dollar': true,
+      'bang-for-buck': true,
       'context-window': true,
       'modalities': true
     }
@@ -106,7 +106,7 @@
    * @param {number} rank - The model's rank (1 = best, higher = worse)
    * @returns {number|null} - Value score or null if not calculable
    */
-  function calculateEloPerDollar(arenaScore, inputCostPer1M, outputCostPer1M, rank = 1) {
+  function calculateBangForBuck(arenaScore, inputCostPer1M, outputCostPer1M, rank = 1) {
     if (!arenaScore || arenaScore <= ELO_BASELINE) return null; // Need Elo > baseline for positive score
     const blendedPrice = (inputCostPer1M + outputCostPer1M) / 2;
     // Base formula: (Elo - baseline) / log(1 + Price)
@@ -163,7 +163,7 @@
           return;
         }
         if (header.classList.contains('lmarena-price-header') ||
-          header.classList.contains('lmarena-elopd-header') ||
+          header.classList.contains('lmarena-bfb-header') ||
           header.classList.contains('lmarena-ctx-header') ||
           header.classList.contains('lmarena-mod-header')) {
           return;
@@ -217,22 +217,22 @@
     // Apply visibility to LMArena Plus columns
     const pricingHeaders = document.querySelectorAll('.lmarena-price-header');
     const pricingCells = document.querySelectorAll('.lmarena-price-cell');
-    const elopdHeaders = document.querySelectorAll('.lmarena-elopd-header');
-    const elopdCells = document.querySelectorAll('.lmarena-elopd-cell');
+    const bfbHeaders = document.querySelectorAll('.lmarena-bfb-header');
+    const bfbCells = document.querySelectorAll('.lmarena-bfb-cell');
     const ctxHeaders = document.querySelectorAll('.lmarena-ctx-header');
     const ctxCells = document.querySelectorAll('.lmarena-ctx-cell');
     const modHeaders = document.querySelectorAll('.lmarena-mod-header');
     const modCells = document.querySelectorAll('.lmarena-mod-cell');
 
     const pricingVisible = currentColumnVisibility['pricing'];
-    const elopdVisible = currentColumnVisibility['elo-per-dollar'];
+    const bfbVisible = currentColumnVisibility['bang-for-buck'];
     const ctxVisible = currentColumnVisibility['context-window'];
     const modVisible = currentColumnVisibility['modalities'];
 
     pricingHeaders.forEach(el => el.style.display = pricingVisible ? '' : 'none');
     pricingCells.forEach(el => el.style.display = pricingVisible ? '' : 'none');
-    elopdHeaders.forEach(el => el.style.display = elopdVisible ? '' : 'none');
-    elopdCells.forEach(el => el.style.display = elopdVisible ? '' : 'none');
+    bfbHeaders.forEach(el => el.style.display = bfbVisible ? '' : 'none');
+    bfbCells.forEach(el => el.style.display = bfbVisible ? '' : 'none');
     ctxHeaders.forEach(el => el.style.display = ctxVisible ? '' : 'none');
     ctxCells.forEach(el => el.style.display = ctxVisible ? '' : 'none');
     modHeaders.forEach(el => el.style.display = modVisible ? '' : 'none');
@@ -248,7 +248,7 @@
     setLoading(cells, loading, cellType = 'price') {
       const classMap = {
         'price': 'lmarena-price-cell--loading',
-        'elopd': 'lmarena-elopd-cell--loading',
+        'bfb': 'lmarena-bfb-cell--loading',
         'ctx': 'lmarena-ctx-cell--loading',
         'mod': 'lmarena-mod-cell--loading'
       };
@@ -258,7 +258,7 @@
         if (loading) {
           cell.textContent = 'Loading';
           cell.classList.add(loadingClass);
-          cell.classList.remove('lmarena-price-cell--na', 'lmarena-elopd-cell--na', 'lmarena-ctx-cell--na', 'lmarena-mod-cell--na');
+          cell.classList.remove('lmarena-price-cell--na', 'lmarena-bfb-cell--na', 'lmarena-ctx-cell--na', 'lmarena-mod-cell--na');
         } else {
           cell.classList.remove(loadingClass);
         }
@@ -863,7 +863,7 @@
 
   class SortManager {
     constructor() {
-      this.currentColumn = null; // 'pricing', 'elopd', 'ctx', 'mod', or null
+      this.currentColumn = null; // 'pricing', 'bfb', 'ctx', 'mod', or null
       this.currentDirection = null; // 'asc', 'desc', or null
       this.headerButtons = new Map(); // columnType -> button element
       this._setupNativeSortListener();
@@ -880,7 +880,7 @@
 
         // Check if this is a native header (not our injected ones)
         if (th.classList.contains('lmarena-price-header') ||
-          th.classList.contains('lmarena-elopd-header') ||
+          th.classList.contains('lmarena-bfb-header') ||
           th.classList.contains('lmarena-ctx-header') ||
           th.classList.contains('lmarena-mod-header')) {
           return;
@@ -1056,7 +1056,7 @@
     _getValueKey(columnType) {
       switch (columnType) {
         case 'pricing': return '_lmarenaPlusPricing';
-        case 'elopd': return '_lmarenaPlusElopd';
+        case 'bfb': return '_lmarenaPlusBfb';
         case 'ctx': return '_lmarenaPlusCtx';
         case 'mod': return '_lmarenaPlusMod';
         default: return '_lmarenaPlusPricing';
@@ -1076,7 +1076,7 @@
       this.sortManager = sortManager;
       this.processedTables = new WeakSet();
       this.injectedCells = [];
-      this.injectedEloPerDollarCells = [];
+      this.injectedBfbCells = [];
       this.injectedContextWindowCells = [];
       this.injectedModalitiesCells = [];
     }
@@ -1102,7 +1102,7 @@
         }
         // Always inject headers if they don't exist in DOM
         this._injectHeader(headerRow, showLoading);
-        this._injectEloPerDollarHeader(headerRow, showLoading);
+        this._injectBfbHeader(headerRow, showLoading);
         this._injectContextWindowHeader(headerRow, showLoading);
         this._injectModalitiesHeader(headerRow, showLoading);
       }
@@ -1120,7 +1120,7 @@
 
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
-        this._injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+        this._injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
         this._injectContextWindowCell(row, modelColumnIndex, showLoading);
         this._injectModalitiesCell(row, modelColumnIndex, showLoading);
       });
@@ -1137,13 +1137,13 @@
       }
 
       // Update Elo per Dollar cells
-      for (const cellData of this.injectedEloPerDollarCells) {
+      for (const cellData of this.injectedBfbCells) {
         const { cell, modelName, arenaScore, rank } = cellData;
 
         if (!cell.isConnected) continue;
 
-        cell.classList.remove('lmarena-elopd-cell--loading');
-        this._updateEloPerDollarCellContent(cell, modelName, arenaScore, rank);
+        cell.classList.remove('lmarena-bfb-cell--loading');
+        this._updateBfbCellContent(cell, modelName, arenaScore, rank);
       }
 
       // Update Context Window cells
@@ -1169,11 +1169,11 @@
 
     setAllCellsLoading() {
       const cells = this.injectedCells.filter(c => c.cell.isConnected).map(c => c.cell);
-      const elopdCells = this.injectedEloPerDollarCells.filter(c => c.cell.isConnected).map(c => c.cell);
+      const bfbCells = this.injectedBfbCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const ctxCells = this.injectedContextWindowCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const modCells = this.injectedModalitiesCells.filter(c => c.cell.isConnected).map(c => c.cell);
       this.loadingManager.setLoading(cells, true, 'price');
-      this.loadingManager.setLoading(elopdCells, true, 'elopd');
+      this.loadingManager.setLoading(bfbCells, true, 'bfb');
       this.loadingManager.setLoading(ctxCells, true, 'ctx');
       this.loadingManager.setLoading(modCells, true, 'mod');
     }
@@ -1185,11 +1185,11 @@
       document.querySelectorAll(`[${CONFIG.ROW_MARKER}]`).forEach(el => {
         el.removeAttribute(CONFIG.ROW_MARKER);
       });
-      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-elopd-header, .lmarena-elopd-cell, .lmarena-ctx-header, .lmarena-ctx-cell, .lmarena-mod-header, .lmarena-mod-cell').forEach(el => {
+      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-bfb-header, .lmarena-bfb-cell, .lmarena-ctx-header, .lmarena-ctx-cell, .lmarena-mod-header, .lmarena-mod-cell').forEach(el => {
         el.remove();
       });
       this.injectedCells = [];
-      this.injectedEloPerDollarCells = [];
+      this.injectedBfbCells = [];
       this.injectedContextWindowCells = [];
       this.injectedModalitiesCells = [];
       this.processedTables = new WeakSet();
@@ -1257,20 +1257,20 @@
       this.sortManager.registerHeader('pricing', button);
     }
 
-    _injectEloPerDollarHeader(headerRow, showLoading) {
-      if (headerRow.querySelector('.lmarena-elopd-header')) return;
+    _injectBfbHeader(headerRow, showLoading) {
+      if (headerRow.querySelector('.lmarena-bfb-header')) return;
 
       const th = document.createElement('th');
-      th.className = 'lmarena-elopd-header';
+      th.className = 'lmarena-bfb-header';
 
       // Create sortable button
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
       button.innerHTML = `Bang for Buck <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
-      button.addEventListener('click', () => this.sortManager.toggleSort('elopd'));
+      button.addEventListener('click', () => this.sortManager.toggleSort('bfb'));
 
       // Add tooltip hover
-      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'elopd'));
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'bfb'));
       th.addEventListener('mouseleave', () => this.tooltipManager.hide());
 
       th.appendChild(button);
@@ -1278,7 +1278,7 @@
       headerRow.appendChild(th);
 
       // Register with sort manager
-      this.sortManager.registerHeader('elopd', button);
+      this.sortManager.registerHeader('bfb', button);
     }
 
     _injectCell(row, modelColumnIndex, showLoading) {
@@ -1307,8 +1307,8 @@
       }
     }
 
-    _injectEloPerDollarCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
-      if (row.querySelector('.lmarena-elopd-cell')) return;
+    _injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading) {
+      if (row.querySelector('.lmarena-bfb-cell')) return;
 
       const cells = row.querySelectorAll('td');
       if (cells.length === 0) return;
@@ -1334,19 +1334,19 @@
       }
 
       const td = document.createElement('td');
-      td.className = 'lmarena-elopd-cell';
+      td.className = 'lmarena-bfb-cell';
       td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
 
-      this.injectedEloPerDollarCells.push({ cell: td, modelName, arenaScore, rank });
+      this.injectedBfbCells.push({ cell: td, modelName, arenaScore, rank });
 
       // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
       row.appendChild(td);
 
       if (showLoading) {
         td.textContent = 'Loading';
-        td.classList.add('lmarena-elopd-cell--loading');
+        td.classList.add('lmarena-bfb-cell--loading');
       } else {
-        this._updateEloPerDollarCellContent(td, modelName, arenaScore, rank);
+        this._updateBfbCellContent(td, modelName, arenaScore, rank);
       }
     }
 
@@ -1585,40 +1585,40 @@
       }
     }
 
-    _updateEloPerDollarCellContent(cell, modelName, arenaScore, rank = 1) {
+    _updateBfbCellContent(cell, modelName, arenaScore, rank = 1) {
       const pricing = this.pricingService.getPricing(modelName);
       const row = cell.closest('tr');
 
       if (pricing && arenaScore && arenaScore > 1000) {
         const inputCost = pricing.input_cost_per_1m || 0;
         const outputCost = pricing.output_cost_per_1m || 0;
-        const valueScore = calculateEloPerDollar(arenaScore, inputCost, outputCost, rank);
+        const valueScore = calculateBangForBuck(arenaScore, inputCost, outputCost, rank);
 
         if (valueScore !== null) {
           // Format: show score as integer for cleaner display
           const formattedValue = Math.round(valueScore);
-          cell.innerHTML = `<span class="lmarena-elopd-value">${formattedValue}</span>`;
-          cell.classList.remove('lmarena-elopd-cell--na');
+          cell.innerHTML = `<span class="lmarena-bfb-value">${formattedValue}</span>`;
+          cell.classList.remove('lmarena-bfb-cell--na');
           // Store sortable value on row
-          if (row) row._lmarenaPlusElopd = valueScore;
+          if (row) row._lmarenaPlusBfb = valueScore;
         } else {
           cell.textContent = 'N/A';
-          cell.classList.add('lmarena-elopd-cell--na');
-          if (row) row._lmarenaPlusElopd = null;
+          cell.classList.add('lmarena-bfb-cell--na');
+          if (row) row._lmarenaPlusBfb = null;
         }
 
         // Store data for tooltip
-        cell._eloPerDollarData = { arenaScore, pricing, valueScore, rank };
+        cell._bfbData = { arenaScore, pricing, valueScore, rank };
       } else if (!arenaScore || arenaScore <= 1000) {
         cell.textContent = '—';
-        cell.classList.add('lmarena-elopd-cell--na');
-        cell._eloPerDollarData = null;
-        if (row) row._lmarenaPlusElopd = null;
+        cell.classList.add('lmarena-bfb-cell--na');
+        cell._bfbData = null;
+        if (row) row._lmarenaPlusBfb = null;
       } else {
         cell.textContent = 'N/A';
-        cell.classList.add('lmarena-elopd-cell--na');
-        cell._eloPerDollarData = null;
-        if (row) row._lmarenaPlusElopd = null;
+        cell.classList.add('lmarena-bfb-cell--na');
+        cell._bfbData = null;
+        if (row) row._lmarenaPlusBfb = null;
       }
     }
 

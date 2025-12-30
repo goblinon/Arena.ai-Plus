@@ -14,7 +14,7 @@
 
 /* Shared column header base */
 .lmarena-price-header,
-.lmarena-elopd-header,
+.lmarena-bfb-header,
 .lmarena-ctx-header,
 .lmarena-mod-header {
   font-family: inherit;
@@ -28,7 +28,7 @@
 
 /* Ensure header text matches native LMArena headers in both modes */
 html.dark .lmarena-price-header,
-html.dark .lmarena-elopd-header,
+html.dark .lmarena-bfb-header,
 html.dark .lmarena-ctx-header,
 html.dark .lmarena-mod-header,
 html.dark .lmarena-sort-button {
@@ -36,7 +36,7 @@ html.dark .lmarena-sort-button {
 }
 
 html.light .lmarena-price-header,
-html.light .lmarena-elopd-header,
+html.light .lmarena-bfb-header,
 html.light .lmarena-ctx-header,
 html.light .lmarena-mod-header,
 html.light .lmarena-sort-button {
@@ -45,7 +45,7 @@ html.light .lmarena-sort-button {
 
 /* Shared column cell base */
 .lmarena-price-cell,
-.lmarena-elopd-cell,
+.lmarena-bfb-cell,
 .lmarena-ctx-cell,
 .lmarena-mod-cell {
   font-family: inherit;
@@ -60,7 +60,7 @@ html.light .lmarena-sort-button {
 
 /* Shared hover effect */
 .lmarena-price-cell:hover,
-.lmarena-elopd-cell:hover,
+.lmarena-bfb-cell:hover,
 .lmarena-ctx-cell:hover,
 .lmarena-mod-cell:hover {
   background-color: rgba(0, 255, 65, 0.05);
@@ -68,7 +68,7 @@ html.light .lmarena-sort-button {
 
 /* Shared N/A state */
 .lmarena-price-cell--na,
-.lmarena-elopd-cell--na,
+.lmarena-bfb-cell--na,
 .lmarena-ctx-cell--na,
 .lmarena-mod-cell--na {
   color: #888;
@@ -77,7 +77,7 @@ html.light .lmarena-sort-button {
 
 /* Shared loading state base */
 .lmarena-price-cell--loading,
-.lmarena-elopd-cell--loading,
+.lmarena-bfb-cell--loading,
 .lmarena-ctx-cell--loading,
 .lmarena-mod-cell--loading {
   color: #666;
@@ -85,7 +85,7 @@ html.light .lmarena-sort-button {
 
 /* Shared loading spinner base */
 .lmarena-price-cell--loading::after,
-.lmarena-elopd-cell--loading::after,
+.lmarena-bfb-cell--loading::after,
 .lmarena-ctx-cell--loading::after,
 .lmarena-mod-cell--loading::after {
   content: '';
@@ -101,7 +101,7 @@ html.light .lmarena-sort-button {
 
 /* Loading spinner accent colors */
 .lmarena-price-cell--loading::after,
-.lmarena-elopd-cell--loading::after {
+.lmarena-bfb-cell--loading::after {
   border-top-color: #00FF41;
   /* Green */
 }
@@ -202,21 +202,21 @@ table td.lmarena-price-cell {
 }
 
 /* ============================================ */
-/* Elo per Dollar Column Specifics */
+/* Bang for Buck Column Specifics */
 /* ============================================ */
 
-.lmarena-elopd-cell {
+.lmarena-bfb-cell {
   text-align: right;
 }
 
-.lmarena-elopd-value {
+.lmarena-bfb-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   color: #00FF41;
   font-weight: 600;
 }
 
-table th.lmarena-elopd-header,
-table td.lmarena-elopd-cell {
+table th.lmarena-bfb-header,
+table td.lmarena-bfb-cell {
   min-width: 120px;
   max-width: 180px;
 }

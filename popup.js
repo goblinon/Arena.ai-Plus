@@ -26,7 +26,7 @@
         'organization': true,
         'license': true,
         'pricing': true,
-        'elo-per-dollar': true,
+        'bang-for-buck': true,
         'context-window': true,
         'modalities': true
     };

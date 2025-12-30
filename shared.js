@@ -17,7 +17,7 @@ const COLUMN_TOOLTIPS = {
         title: 'Pricing',
         description: 'Cost per token to use this model. Shows combined input + output cost, with breakdown on hover.'
     },
-    'elo-per-dollar': {
+    'bang-for-buck': {
         title: 'Bang for Buck',
         description: 'A value index that finds the smartest models for the lowest price. Higher is better.'
     },
@@ -32,6 +32,6 @@ const COLUMN_TOOLTIPS = {
 };
 
 // Aliases for internal keys used in content.js
-COLUMN_TOOLTIPS.elopd = COLUMN_TOOLTIPS['elo-per-dollar'];
+COLUMN_TOOLTIPS.bfb = COLUMN_TOOLTIPS['bang-for-buck'];
 COLUMN_TOOLTIPS.ctx = COLUMN_TOOLTIPS['context-window'];
 COLUMN_TOOLTIPS.mod = COLUMN_TOOLTIPS.modalities;
