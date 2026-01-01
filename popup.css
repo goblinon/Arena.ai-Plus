@@ -275,7 +275,3 @@ body {
 .setting-hint--error {
     color: #e57373;
 }
-
-.setting-hint--success {
-    color: var(--lmp-accent-green);
-}

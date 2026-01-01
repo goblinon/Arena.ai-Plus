@@ -30,8 +30,8 @@ const COLUMN_TOOLTIPS = {
         description: 'Data types the model can handle. Top row: inputs. Bottom row: outputs.'
     },
     notification: {
-        title: 'Generation Alerts',
-        description: 'Get notified when models finish generating. Works in battle mode, side-by-side, and direct chat.'
+        title: 'Generation Complete Alerts',
+        description: 'Get browser notifications when models finish generating.<br>Allow notifications on lmarena.ai when prompted!'
     }
 };
 

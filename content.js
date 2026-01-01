@@ -276,9 +276,9 @@
   }
 
   // ============================================
-  // Battle Notification Manager
+  // Notification Manager
   // ============================================
-  class BattleNotificationManager {
+  class NotificationManager {
     constructor() {
       this.observer = null;
       this.hasNotifiedForCurrentBattle = false;
@@ -2003,7 +2003,7 @@
   // ============================================
   // Main Initialization
   // ============================================
-  let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver, battleNotificationManager;
+  let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver, notificationManager;
 
   async function init() {
 
@@ -2038,10 +2038,10 @@
     // Start observing for new tables and rows
     tableObserver.start();
 
-    // Initialize battle notification manager
-    battleNotificationManager = new BattleNotificationManager();
+    // Initialize notification manager
+    notificationManager = new NotificationManager();
     if (battleNotificationEnabled) {
-      battleNotificationManager.start();
+      notificationManager.start();
     }
 
 
@@ -2068,8 +2068,8 @@
 
       } else if (message.type === 'BATTLE_NOTIFICATION_CHANGED') {
         battleNotificationEnabled = message.value;
-        if (battleNotificationManager) {
-          battleNotificationManager.setEnabled(battleNotificationEnabled);
+        if (notificationManager) {
+          notificationManager.setEnabled(battleNotificationEnabled);
         }
       }
     });

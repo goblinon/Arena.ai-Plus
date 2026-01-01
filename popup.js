@@ -86,21 +86,17 @@
 
     // Update notification hint based on permission status
     function updateNotificationHint() {
+        // Only show hint for error states - keep UI clean otherwise
         if (!('Notification' in window)) {
             notificationHint.textContent = 'Notifications not supported in this browser';
             notificationHint.className = 'setting-hint setting-hint--error';
             battleNotificationCheckbox.disabled = true;
-            return;
-        }
-
-        if (Notification.permission === 'granted') {
-            notificationHint.textContent = battleNotificationCheckbox.checked ? 'You\'ll be notified when a battle is ready' : '';
-            notificationHint.className = 'setting-hint setting-hint--success';
         } else if (Notification.permission === 'denied') {
             notificationHint.textContent = 'Notifications blocked. Enable in browser settings.';
             notificationHint.className = 'setting-hint setting-hint--error';
         } else {
-            notificationHint.textContent = battleNotificationCheckbox.checked ? 'Permission will be requested on LMArena' : '';
+            // Clear hint for normal states - tooltip explains the feature
+            notificationHint.textContent = '';
             notificationHint.className = 'setting-hint';
         }
     }
