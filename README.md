@@ -28,6 +28,13 @@ Our specialized value metric helps you find the "sweet spot" of intelligence vs.
 - **Modalities**: Visual icons indicating which models support Text, Image, Audio, or Video (both Input and Output).
 - **Native Sorting**: All injected columns (Pricing, Value, Context) are fully sortable, integrating perfectly with LMArena's native table controls.
 
+### 🔔 Generation Alerts
+Never miss a completed generation again! Get browser notifications when:
+- **Battle/Side-by-side mode**: Both models finish and voting is ready.
+- **Direct chat**: Your single model finishes generating.
+
+*Perfect for long code generations where you've switched to another tab.*
+
 ### 🎨 Seamless UI Integration
 - **Light & Dark Mode**: Modality icons and price cells adapt automatically.
 - **Smart Tooltips**: Detailed cost breakdowns (Input vs. Output) appear on hover.

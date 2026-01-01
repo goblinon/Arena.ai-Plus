@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "LMArena Plus",
-  "version": "1.6.4",
-  "description": "Supercharge LMArena.ai with pricing, Bang for Buck rankings, context limits & modalities. Find the best LLM for your buck!",
+  "version": "1.7.0",
+  "description": "Supercharge LMArena.ai with pricing, Bang for Buck rankings, context limits, modalities & generation alerts!",
   "permissions": [
     "storage",
     "tabs"

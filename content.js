@@ -36,6 +36,7 @@
     TOKEN_UNIT_KEY: 'lmarena-token-unit',
     PROVIDER_KEY: 'lmarena-data-provider',
     COLUMN_VISIBILITY_KEY: 'lmarena-column-visibility',
+    BATTLE_NOTIFICATION_KEY: 'lmarena-battle-notification',
     DEFAULT_TOKEN_UNIT: 1000000,
     DEFAULT_PROVIDER: 'openrouter',
     DEFAULT_COLUMN_VISIBILITY: {
@@ -56,6 +57,7 @@
   let currentTokenUnit = CONFIG.DEFAULT_TOKEN_UNIT;
   let currentProvider = CONFIG.DEFAULT_PROVIDER;
   let currentColumnVisibility = { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
+  let battleNotificationEnabled = false;
 
   // ============================================
   // Token Unit Helpers
@@ -120,15 +122,22 @@
 
   async function loadPreferences() {
     try {
-      const result = await chrome.storage.sync.get([CONFIG.TOKEN_UNIT_KEY, CONFIG.PROVIDER_KEY, CONFIG.COLUMN_VISIBILITY_KEY]);
+      const result = await chrome.storage.sync.get([
+        CONFIG.TOKEN_UNIT_KEY,
+        CONFIG.PROVIDER_KEY,
+        CONFIG.COLUMN_VISIBILITY_KEY,
+        CONFIG.BATTLE_NOTIFICATION_KEY
+      ]);
       currentTokenUnit = result[CONFIG.TOKEN_UNIT_KEY] || CONFIG.DEFAULT_TOKEN_UNIT;
       currentProvider = result[CONFIG.PROVIDER_KEY] || CONFIG.DEFAULT_PROVIDER;
       currentColumnVisibility = result[CONFIG.COLUMN_VISIBILITY_KEY] || { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
+      battleNotificationEnabled = result[CONFIG.BATTLE_NOTIFICATION_KEY] || false;
     } catch (error) {
       console.warn('[LMArena Plus] Failed to load preferences:', error);
       currentTokenUnit = CONFIG.DEFAULT_TOKEN_UNIT;
       currentProvider = CONFIG.DEFAULT_PROVIDER;
       currentColumnVisibility = { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
+      battleNotificationEnabled = false;
     }
   }
 
@@ -263,6 +272,198 @@
           cell.classList.remove(loadingClass);
         }
       });
+    }
+  }
+
+  // ============================================
+  // Battle Notification Manager
+  // ============================================
+  class BattleNotificationManager {
+    constructor() {
+      this.observer = null;
+      this.hasNotifiedForCurrentBattle = false;
+      this.lastVoteButtonsFound = 0;
+    }
+
+    start() {
+      if (this.observer) return;
+
+      // Only observe on battle pages
+      if (!this._isOnBattlePage()) {
+        // Re-check when URL changes
+        this._watchForNavigation();
+        return;
+      }
+
+      this._startObserving();
+    }
+
+    stop() {
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+    }
+
+    setEnabled(enabled) {
+      if (enabled) {
+        this.start();
+      } else {
+        this.stop();
+      }
+    }
+
+    _isOnBattlePage() {
+      const path = window.location.pathname;
+      // Match battle pages: /, /arena, /arena/*, but not /leaderboard
+      return path === '/' ||
+        path.startsWith('/arena') ||
+        path.includes('/battle') ||
+        path.includes('/image') ||
+        path.includes('/webdev') ||
+        path.includes('/vision');
+    }
+
+    _watchForNavigation() {
+      // Use a simple interval to check for page changes (SPA navigation)
+      const checkInterval = setInterval(() => {
+        if (this._isOnBattlePage() && battleNotificationEnabled) {
+          clearInterval(checkInterval);
+          this._startObserving();
+        }
+      }, 1000);
+
+      // Stop checking after 30 seconds
+      setTimeout(() => clearInterval(checkInterval), 30000);
+    }
+
+    _startObserving() {
+      this.observer = new MutationObserver(() => {
+        this._checkForVotingButtons();
+      });
+
+      this.observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      // Also check immediately
+      this._checkForVotingButtons();
+    }
+
+    _checkForVotingButtons() {
+      if (!battleNotificationEnabled) return;
+
+      const buttons = document.querySelectorAll('button');
+      let voteButtonsFound = 0;
+      let directModeButtonsFound = 0;
+
+      for (const btn of buttons) {
+        const text = btn.textContent.toLowerCase();
+        const ariaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
+
+        // Battle mode: voting buttons
+        if (text.includes('is better') ||
+          (text.includes('tie') && text.includes('🤝')) ||
+          text.includes('both are bad')) {
+          voteButtonsFound++;
+        }
+
+        // Direct mode: like/dislike buttons
+        if (ariaLabel.includes('like this response') ||
+          ariaLabel.includes('dislike this response')) {
+          directModeButtonsFound++;
+        }
+      }
+
+      // Battle mode: found voting buttons (Left/Right is Better + tie + both bad)
+      const battleComplete = voteButtonsFound >= 3;
+
+      // Direct mode: found like button (appears when generation is complete)
+      // We need at least 1 like button, but count how many we have
+      const directComplete = directModeButtonsFound >= 1;
+
+      if ((battleComplete || directComplete) && !this.hasNotifiedForCurrentBattle) {
+        this.hasNotifiedForCurrentBattle = true;
+        this._sendNotification(battleComplete ? 'battle' : 'direct');
+        this._resetAfterDelay();
+      }
+
+      // Reset state if all completion indicators disappear (new session started)
+      const currentTotal = voteButtonsFound + directModeButtonsFound;
+      if (currentTotal === 0 && this.lastVoteButtonsFound > 0) {
+        this.hasNotifiedForCurrentBattle = false;
+      }
+
+      this.lastVoteButtonsFound = currentTotal;
+    }
+
+    async _sendNotification(mode = 'battle') {
+      // Check if we have permission
+      if (!('Notification' in window)) return;
+
+      // Request permission if needed
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+      }
+
+      if (Notification.permission !== 'granted') return;
+
+      // Don't notify if tab is visible
+      if (document.visibilityState === 'visible') {
+        // Just flash the title instead
+        this._flashTitle(mode);
+        return;
+      }
+
+      // Send notification with mode-specific message
+      const title = mode === 'battle' ? 'LMArena Battle Ready! 🏆' : 'LMArena Generation Complete! ✨';
+      const body = mode === 'battle'
+        ? 'Both models have finished generating. Time to vote!'
+        : 'Your model has finished generating.';
+
+      const notification = new Notification(title, {
+        body: body,
+        icon: chrome.runtime.getURL('icons/icon128.png'),
+        tag: 'lmarena-ready',
+        requireInteraction: false
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      // Also flash the title
+      this._flashTitle(mode);
+    }
+
+    _flashTitle(mode = 'battle') {
+      const originalTitle = document.title;
+      let isFlashing = true;
+      let flashCount = 0;
+      const maxFlashes = 6;
+      const flashText = mode === 'battle' ? '🏆 Ready to Vote!' : '✨ Generation Done!';
+
+      const flashInterval = setInterval(() => {
+        if (flashCount >= maxFlashes || document.visibilityState === 'visible') {
+          document.title = originalTitle;
+          clearInterval(flashInterval);
+          return;
+        }
+
+        document.title = isFlashing ? flashText : originalTitle;
+        isFlashing = !isFlashing;
+        flashCount++;
+      }, 1000);
+    }
+
+    _resetAfterDelay() {
+      // Reset after 60 seconds to allow for next generation
+      setTimeout(() => {
+        this.hasNotifiedForCurrentBattle = false;
+      }, 60000);
     }
   }
 
@@ -1802,7 +2003,7 @@
   // ============================================
   // Main Initialization
   // ============================================
-  let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver;
+  let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver, battleNotificationManager;
 
   async function init() {
 
@@ -1837,6 +2038,12 @@
     // Start observing for new tables and rows
     tableObserver.start();
 
+    // Initialize battle notification manager
+    battleNotificationManager = new BattleNotificationManager();
+    if (battleNotificationEnabled) {
+      battleNotificationManager.start();
+    }
+
 
     // Listen for preference changes from popup
     chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -1859,6 +2066,11 @@
         currentColumnVisibility = message.value;
         applyColumnVisibility();
 
+      } else if (message.type === 'BATTLE_NOTIFICATION_CHANGED') {
+        battleNotificationEnabled = message.value;
+        if (battleNotificationManager) {
+          battleNotificationManager.setEnabled(battleNotificationEnabled);
+        }
       }
     });
   }

@@ -42,6 +42,8 @@
     const attributionDiv = document.getElementById('attribution');
     const columnCheckboxes = document.querySelectorAll('.column-picker input[type="checkbox"]');
     const pricingLabel = document.getElementById('pricing-label');
+    const battleNotificationCheckbox = document.getElementById('battle-notification');
+    const notificationHint = document.getElementById('notification-hint');
 
     // Update pricing label based on token unit
     function updatePricingLabel(unit) {
@@ -52,7 +54,7 @@
     // Load saved preferences
     async function loadPreferences() {
         try {
-            const result = await chrome.storage.sync.get([TOKEN_UNIT_KEY, PROVIDER_KEY, COLUMN_VISIBILITY_KEY]);
+            const result = await chrome.storage.sync.get([TOKEN_UNIT_KEY, PROVIDER_KEY, COLUMN_VISIBILITY_KEY, BATTLE_NOTIFICATION_KEY]);
 
             const savedUnit = result[TOKEN_UNIT_KEY] || DEFAULT_TOKEN_UNIT;
             tokenUnitSelect.value = savedUnit.toString();
@@ -70,10 +72,36 @@
                     checkbox.checked = savedVisibility[columnId];
                 }
             });
+
+            // Load battle notification setting
+            const notificationEnabled = result[BATTLE_NOTIFICATION_KEY] || false;
+            battleNotificationCheckbox.checked = notificationEnabled;
+            updateNotificationHint();
         } catch (error) {
             console.warn('Failed to load preferences:', error);
             tokenUnitSelect.value = DEFAULT_TOKEN_UNIT.toString();
             dataProviderSelect.value = DEFAULT_PROVIDER;
+        }
+    }
+
+    // Update notification hint based on permission status
+    function updateNotificationHint() {
+        if (!('Notification' in window)) {
+            notificationHint.textContent = 'Notifications not supported in this browser';
+            notificationHint.className = 'setting-hint setting-hint--error';
+            battleNotificationCheckbox.disabled = true;
+            return;
+        }
+
+        if (Notification.permission === 'granted') {
+            notificationHint.textContent = battleNotificationCheckbox.checked ? 'You\'ll be notified when a battle is ready' : '';
+            notificationHint.className = 'setting-hint setting-hint--success';
+        } else if (Notification.permission === 'denied') {
+            notificationHint.textContent = 'Notifications blocked. Enable in browser settings.';
+            notificationHint.className = 'setting-hint setting-hint--error';
+        } else {
+            notificationHint.textContent = battleNotificationCheckbox.checked ? 'Permission will be requested on LMArena' : '';
+            notificationHint.className = 'setting-hint';
         }
     }
 
@@ -158,6 +186,22 @@
             const visibility = getColumnVisibility();
             savePreference(COLUMN_VISIBILITY_KEY, visibility, 'COLUMN_VISIBILITY_CHANGED');
         });
+    });
+
+    // Battle notification toggle
+    battleNotificationCheckbox.addEventListener('change', async () => {
+        const enabled = battleNotificationCheckbox.checked;
+        await chrome.storage.sync.set({ [BATTLE_NOTIFICATION_KEY]: enabled });
+        updateNotificationHint();
+
+        // Notify content scripts
+        const tabs = await chrome.tabs.query({ url: 'https://lmarena.ai/*' });
+        for (const tab of tabs) {
+            chrome.tabs.sendMessage(tab.id, {
+                type: 'BATTLE_NOTIFICATION_CHANGED',
+                value: enabled
+            }).catch(() => { });
+        }
     });
 
     // Display version number

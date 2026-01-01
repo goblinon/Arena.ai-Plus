@@ -256,3 +256,26 @@ body {
     color: var(--lmp-text-secondary);
     user-select: none;
 }
+
+/* Notification Toggle */
+.notification-toggle {
+    background: var(--lmp-bg-surface);
+    border: 1px solid var(--lmp-border);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.setting-hint {
+    font-size: 11px;
+    color: var(--lmp-text-subtle);
+    margin: 0;
+    padding: 0 4px;
+}
+
+.setting-hint--error {
+    color: #e57373;
+}
+
+.setting-hint--success {
+    color: var(--lmp-accent-green);
+}

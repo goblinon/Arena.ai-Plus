@@ -28,6 +28,10 @@ const COLUMN_TOOLTIPS = {
     modalities: {
         title: 'Modalities',
         description: 'Data types the model can handle. Top row: inputs. Bottom row: outputs.'
+    },
+    notification: {
+        title: 'Generation Alerts',
+        description: 'Get notified when models finish generating. Works in battle mode, side-by-side, and direct chat.'
     }
 };
 
@@ -35,3 +39,6 @@ const COLUMN_TOOLTIPS = {
 COLUMN_TOOLTIPS.bfb = COLUMN_TOOLTIPS['bang-for-buck'];
 COLUMN_TOOLTIPS.ctx = COLUMN_TOOLTIPS['context-window'];
 COLUMN_TOOLTIPS.mod = COLUMN_TOOLTIPS.modalities;
+
+// Battle notification settings
+const BATTLE_NOTIFICATION_KEY = 'lmarena-battle-notification';
