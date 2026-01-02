@@ -257,12 +257,83 @@ body {
     user-select: none;
 }
 
-/* Notification Toggle */
+/* Toggle Switch Styles */
+.toggle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 10px;
+    transition: opacity 0.2s;
+}
+
+.toggle-item:hover {
+    opacity: 0.9;
+}
+
+.toggle-label {
+    font-size: 13px;
+    color: var(--lmp-text-secondary);
+    user-select: none;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--lmp-border);
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 22px;
+}
+
+.toggle-slider::before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--lmp-text-muted);
+    transition: transform 0.25s ease, background-color 0.25s ease;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background-color: var(--lmp-accent-green);
+    box-shadow: 0 0 8px var(--lmp-shadow-glow);
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(18px);
+    background-color: var(--lmp-text-primary);
+}
+
+.toggle-switch input:disabled+.toggle-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Notification Toggle Container */
 .notification-toggle {
     background: var(--lmp-bg-surface);
     border: 1px solid var(--lmp-border);
     border-radius: 6px;
-    padding: 10px;
 }
 
 .setting-hint {

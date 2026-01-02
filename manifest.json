@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LMArena Plus",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Supercharge LMArena.ai with pricing, Bang for Buck rankings, context limits, modalities & generation alerts!",
   "permissions": [
     "storage",

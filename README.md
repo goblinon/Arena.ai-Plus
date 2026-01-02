@@ -44,7 +44,11 @@ Never miss a completed generation again! Get browser notifications when:
 
 ## 🛠 Installation
 
-Currently in developer preview. To install:
+### Chrome Web Store (Recommended)
+
+👉 [**Install LMArena Plus from the Chrome Web Store**](https://chromewebstore.google.com/detail/gialbmebogmajkfhacmigiiljejkjflm)
+
+### Manual Installation (For Developers)
 
 1. **Download** or clone this repository to your local machine.
 2. Open Chrome and navigate to `chrome://extensions/`.
