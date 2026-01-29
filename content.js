@@ -1,6 +1,6 @@
 /*
- * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
- * Copyright (C) 2025 LMArena Plus
+ * Arena.ai Plus - Adds pricing and other useful data to Arena.ai's leaderboard tables.
+ * Copyright (C) 2025 Arena.ai Plus
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -386,7 +386,7 @@
       }
 
       console.log('[LMArena Plus] Creating notification...');
-      const notification = new Notification('LMArena Ready! 🏆', {
+      const notification = new Notification('Arena.ai Ready! 🏆', {
         body: 'Generation complete - ready to vote!',
         icon: chrome.runtime.getURL('icons/icon128.png'),
         tag: 'lmarena-ready',

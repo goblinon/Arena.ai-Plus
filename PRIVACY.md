@@ -2,7 +2,7 @@
 
 **Effective Date:** December 2025
 
-The **LMArena Plus** Chrome Extension ("the Extension") preserves your privacy.
+The **Arena.ai Plus** Chrome Extension ("the Extension") preserves your privacy.
 
 ## Data Collection
 **We do not collect, store, share, or sell your personal data.** 

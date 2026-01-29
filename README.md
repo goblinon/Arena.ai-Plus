@@ -1,17 +1,19 @@
-# LMArena Plus
+# Arena.ai Plus
 
-[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgoblinon%2FLMArena-Plus%2Fmain%2Fmanifest.json&query=%24.version&label=version&color=blue)](manifest.json)
+*Formerly known as LMArena Plus*
+
+[![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fgoblinon%2FArena.ai-Plus%2Fmain%2Fmanifest.json&query=%24.version&label=version&color=blue)](manifest.json)
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
-**LMArena Plus** is a powerful Chrome Extension that enhances the [Arena (Chatbot Arena)](https://arena.ai/leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
+**Arena.ai Plus** is a powerful Chrome Extension that enhances the [Arena (Chatbot Arena)](https://arena.ai/leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
 
 ---
 
 ## ✨ Key Features
 
 ### 💰 Real-Time Pricing Integration
-Stop guessing what your favorite models cost. LMArena Plus injects a "Pricing" column directly into the leaderboard, pulling fresh data from top providers:
+Stop guessing what your favorite models cost. Arena.ai Plus injects a "Pricing" column directly into the leaderboard, pulling fresh data from top providers:
 - **OpenRouter**
 - **Helicone**
 - **LiteLLM**
@@ -46,7 +48,7 @@ Never miss a completed generation again! Get browser notifications when:
 
 ### Chrome Web Store (Recommended)
 
-👉 [**Install LMArena Plus from the Chrome Web Store**](https://chromewebstore.google.com/detail/gialbmebogmajkfhacmigiiljejkjflm)
+👉 [**Install Arena.ai Plus from the Chrome Web Store**](https://chromewebstore.google.com/detail/gialbmebogmajkfhacmigiiljejkjflm)
 
 ### Manual Installation (For Developers)
 
@@ -77,4 +79,4 @@ Distributed under the GPLv3 License. See `LICENSE` for more information.
 
 ---
 
-*Note: This extension is not affiliated with LMSYS or Chatbot Arena. Pricing data is fetched from public APIs of the respective providers.*
+*Note: This extension is not affiliated with Arena.ai or Chatbot Arena. Pricing data is fetched from public APIs of the respective providers.*

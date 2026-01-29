@@ -121,7 +121,7 @@ body {
     font-weight: 500;
     text-decoration: none;
     color: var(--lmp-text-primary);
-    background: linear-gradient(135deg, #2a3c4e 0%, var(--lmp-accent-green-dark) 100%);
+    background: linear-gradient(135deg, #2a3c4e 0%, #ff00ff 100%);
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -133,7 +133,7 @@ body {
 
 .donate-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--lmp-shadow-glow);
+    box-shadow: 0 4px 12px rgba(255, 0, 255, 0.3);
 }
 
 .donate-button:active {

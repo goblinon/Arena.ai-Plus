@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "LMArena Plus",
-  "version": "1.8.0",
+  "name": "Arena.ai Plus",
+  "version": "2.0.0",
   "description": "Supercharge Arena.ai with pricing, Bang for Buck rankings, context limits, modalities & generation alerts!",
   "permissions": [
     "storage",

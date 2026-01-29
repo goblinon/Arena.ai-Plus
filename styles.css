@@ -14,7 +14,7 @@
 
 :root {
   /* Accent colors */
-  --lmp-accent-green: #00FF41;
+  --lmp-accent-green: #00ffff;
   --lmp-accent-green-dark: #00cc33;
   --lmp-accent-blue: #60a5fa;
   --lmp-accent-purple: #a78bfa;
@@ -247,7 +247,7 @@ table td.lmarena-price-cell {
 
 .lmarena-bfb-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: var(--lmp-accent-green);
+  color: inherit;
   font-weight: 600;
 }
 
@@ -267,7 +267,7 @@ table td.lmarena-bfb-cell {
 
 .lmarena-ctx-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: var(--lmp-accent-blue);
+  color: inherit;
   font-weight: 600;
 }
 
