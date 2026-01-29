@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "LMArena Plus",
-  "version": "1.7.2",
-  "description": "Supercharge LMArena.ai with pricing, Bang for Buck rankings, context limits, modalities & generation alerts!",
+  "version": "1.8.0",
+  "description": "Supercharge Arena.ai with pricing, Bang for Buck rankings, context limits, modalities & generation alerts!",
   "permissions": [
     "storage",
     "tabs"
@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://lmarena.ai/*"
+        "https://arena.ai/*"
       ],
       "js": [
         "shared.js",
@@ -49,7 +49,7 @@
         "icons/*.svg"
       ],
       "matches": [
-        "https://lmarena.ai/*"
+        "https://arena.ai/*"
       ]
     }
   ]

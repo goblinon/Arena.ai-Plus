@@ -4,7 +4,7 @@
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
-**LMArena Plus** is a powerful Chrome Extension that enhances the [LMArena (Chatbot Arena)](https://lmarena.ai/leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
+**LMArena Plus** is a powerful Chrome Extension that enhances the [Arena (Chatbot Arena)](https://arena.ai/leaderboard) leaderboard with real-time pricing data, specialized value metrics, and deeper model insights.
 
 ---
 
@@ -54,7 +54,7 @@ Never miss a completed generation again! Get browser notifications when:
 2. Open Chrome and navigate to `chrome://extensions/`.
 3. Enable **"Developer mode"** in the top-right corner.
 4. Click **"Load unpacked"** and select the folder containing this project.
-5. Visit [LMArena](https://lmarena.ai/leaderboard) and enjoy!
+5. Visit [Arena](https://arena.ai/leaderboard) and enjoy!
 
 ---
 

@@ -131,7 +131,7 @@
       currentTokenUnit = result[CONFIG.TOKEN_UNIT_KEY] || CONFIG.DEFAULT_TOKEN_UNIT;
       currentProvider = result[CONFIG.PROVIDER_KEY] || CONFIG.DEFAULT_PROVIDER;
       currentColumnVisibility = result[CONFIG.COLUMN_VISIBILITY_KEY] || { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
-      battleNotificationEnabled = result[CONFIG.BATTLE_NOTIFICATION_KEY] || false;
+      battleNotificationEnabled = result[CONFIG.BATTLE_NOTIFICATION_KEY] ?? true;
     } catch (error) {
       console.warn('[LMArena Plus] Failed to load preferences:', error);
       currentTokenUnit = CONFIG.DEFAULT_TOKEN_UNIT;
@@ -276,25 +276,22 @@
   }
 
   // ============================================
-  // Notification Manager
+  // Notification Manager (Simplified)
   // ============================================
   class NotificationManager {
     constructor() {
       this.observer = null;
-      this.hasNotifiedForCurrentBattle = false;
-      this.lastVoteButtonsFound = 0;
+      this.lastButtonState = false; // Track if buttons were visible last check
     }
 
     start() {
-      if (this.observer) return;
-
-      // Only observe on battle pages
-      if (!this._isOnBattlePage()) {
-        // Re-check when URL changes
-        this._watchForNavigation();
+      console.log('[LMArena Plus] NotificationManager.start() called');
+      if (this.observer) {
+        console.log('[LMArena Plus] Observer already exists, returning');
         return;
       }
 
+      console.log('[LMArena Plus] Starting observation');
       this._startObserving();
     }
 
@@ -313,33 +310,9 @@
       }
     }
 
-    _isOnBattlePage() {
-      const path = window.location.pathname;
-      // Match battle pages: /, /arena, /arena/*, but not /leaderboard
-      return path === '/' ||
-        path.startsWith('/arena') ||
-        path.includes('/battle') ||
-        path.includes('/image') ||
-        path.includes('/webdev') ||
-        path.includes('/vision');
-    }
-
-    _watchForNavigation() {
-      // Use a simple interval to check for page changes (SPA navigation)
-      const checkInterval = setInterval(() => {
-        if (this._isOnBattlePage() && battleNotificationEnabled) {
-          clearInterval(checkInterval);
-          this._startObserving();
-        }
-      }, 1000);
-
-      // Stop checking after 30 seconds
-      setTimeout(() => clearInterval(checkInterval), 30000);
-    }
-
     _startObserving() {
       this.observer = new MutationObserver(() => {
-        this._checkForVotingButtons();
+        this._checkForCompletion();
       });
 
       this.observer.observe(document.body, {
@@ -347,123 +320,105 @@
         subtree: true
       });
 
-      // Also check immediately
-      this._checkForVotingButtons();
+      this._checkForCompletion();
     }
 
-    _checkForVotingButtons() {
+    _checkForCompletion() {
       if (!battleNotificationEnabled) return;
 
+      // Simple check: look for any voting/rating buttons
       const buttons = document.querySelectorAll('button');
-      let voteButtonsFound = 0;
-      let directModeButtonsFound = 0;
+      let votingButtonsVisible = false;
 
       for (const btn of buttons) {
         const text = btn.textContent.toLowerCase();
         const ariaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
 
-        // Battle mode: voting buttons
+        // Any of these indicate generation is complete
         if (text.includes('is better') ||
-          (text.includes('tie') && text.includes('🤝')) ||
-          text.includes('both are bad')) {
-          voteButtonsFound++;
-        }
-
-        // Direct mode: like/dislike buttons
-        if (ariaLabel.includes('like this response') ||
+          text.includes('both are good') ||
+          text.includes('both are bad') ||
+          ariaLabel.includes('like this response') ||
           ariaLabel.includes('dislike this response')) {
-          directModeButtonsFound++;
+          votingButtonsVisible = true;
+          break;
         }
       }
 
-      // Battle mode: found voting buttons (Left/Right is Better + tie + both bad)
-      const battleComplete = voteButtonsFound >= 3;
-
-      // Direct mode: found like button (appears when generation is complete)
-      // We need at least 1 like button, but count how many we have
-      const directComplete = directModeButtonsFound >= 1;
-
-      if ((battleComplete || directComplete) && !this.hasNotifiedForCurrentBattle) {
-        this.hasNotifiedForCurrentBattle = true;
-        this._sendNotification(battleComplete ? 'battle' : 'direct');
-        this._resetAfterDelay();
+      // Only notify when buttons first appear (transition from false to true)
+      if (votingButtonsVisible && !this.lastButtonState) {
+        console.log('[LMArena Plus] Generation complete, sending notification');
+        this._sendNotification();
       }
 
-      // Reset state if all completion indicators disappear (new session started)
-      const currentTotal = voteButtonsFound + directModeButtonsFound;
-      if (currentTotal === 0 && this.lastVoteButtonsFound > 0) {
-        this.hasNotifiedForCurrentBattle = false;
-      }
-
-      this.lastVoteButtonsFound = currentTotal;
+      this.lastButtonState = votingButtonsVisible;
     }
 
-    async _sendNotification(mode = 'battle') {
-      // Check if we have permission
-      if (!('Notification' in window)) return;
+    async _sendNotification() {
+      console.log('[LMArena Plus] _sendNotification called');
 
-      // Request permission if needed
-      if (Notification.permission === 'default') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-      }
-
-      if (Notification.permission !== 'granted') return;
-
-      // Don't notify if tab is visible
-      if (document.visibilityState === 'visible') {
-        // Just flash the title instead
-        this._flashTitle(mode);
+      if (!('Notification' in window)) {
+        console.log('[LMArena Plus] Notification API not available');
         return;
       }
 
-      // Send notification with mode-specific message
-      const title = mode === 'battle' ? 'LMArena Battle Ready! 🏆' : 'LMArena Generation Complete! ✨';
-      const body = mode === 'battle'
-        ? 'Both models have finished generating. Time to vote!'
-        : 'Your model has finished generating.';
+      console.log('[LMArena Plus] Notification.permission =', Notification.permission);
 
-      const notification = new Notification(title, {
-        body: body,
+      if (Notification.permission === 'default') {
+        console.log('[LMArena Plus] Requesting permission...');
+        const permission = await Notification.requestPermission();
+        console.log('[LMArena Plus] Permission result:', permission);
+        if (permission !== 'granted') return;
+      }
+
+      if (Notification.permission !== 'granted') {
+        console.log('[LMArena Plus] Permission not granted, exiting');
+        return;
+      }
+
+      console.log('[LMArena Plus] document.visibilityState =', document.visibilityState);
+
+      // Don't notify if tab is visible, just flash title
+      if (document.visibilityState === 'visible') {
+        console.log('[LMArena Plus] Tab visible, flashing title only');
+        this._flashTitle();
+        return;
+      }
+
+      console.log('[LMArena Plus] Creating notification...');
+      const notification = new Notification('LMArena Ready! 🏆', {
+        body: 'Generation complete - ready to vote!',
         icon: chrome.runtime.getURL('icons/icon128.png'),
         tag: 'lmarena-ready',
+        renotify: true,
         requireInteraction: false
       });
+      console.log('[LMArena Plus] Notification created:', notification);
 
       notification.onclick = () => {
         window.focus();
         notification.close();
       };
 
-      // Also flash the title
-      this._flashTitle(mode);
+      this._flashTitle();
     }
 
-    _flashTitle(mode = 'battle') {
+    _flashTitle() {
       const originalTitle = document.title;
       let isFlashing = true;
       let flashCount = 0;
-      const maxFlashes = 6;
-      const flashText = mode === 'battle' ? '🏆 Ready to Vote!' : '✨ Generation Done!';
 
       const flashInterval = setInterval(() => {
-        if (flashCount >= maxFlashes || document.visibilityState === 'visible') {
+        if (flashCount >= 6 || document.visibilityState === 'visible') {
           document.title = originalTitle;
           clearInterval(flashInterval);
           return;
         }
 
-        document.title = isFlashing ? flashText : originalTitle;
+        document.title = isFlashing ? '🏆 Ready to Vote!' : originalTitle;
         isFlashing = !isFlashing;
         flashCount++;
       }, 1000);
-    }
-
-    _resetAfterDelay() {
-      // Reset after 60 seconds to allow for next generation
-      setTimeout(() => {
-        this.hasNotifiedForCurrentBattle = false;
-      }, 60000);
     }
   }
 
@@ -2040,8 +1995,10 @@
 
     // Initialize notification manager
     notificationManager = new NotificationManager();
+    console.log('[LMArena Plus] NotificationManager created, enabled:', battleNotificationEnabled);
     if (battleNotificationEnabled) {
       notificationManager.start();
+      console.log('[LMArena Plus] NotificationManager started');
     }
 
 

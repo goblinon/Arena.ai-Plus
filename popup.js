@@ -73,8 +73,7 @@
                 }
             });
 
-            // Load battle notification setting
-            const notificationEnabled = result[BATTLE_NOTIFICATION_KEY] || false;
+            const notificationEnabled = result[BATTLE_NOTIFICATION_KEY] ?? true;
             battleNotificationCheckbox.checked = notificationEnabled;
             updateNotificationHint();
         } catch (error) {
@@ -141,7 +140,7 @@
             await chrome.storage.sync.set({ [key]: value });
 
             // Notify content scripts to update
-            const tabs = await chrome.tabs.query({ url: 'https://lmarena.ai/*' });
+            const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
             for (const tab of tabs) {
                 chrome.tabs.sendMessage(tab.id, {
                     type: messageType,
@@ -170,7 +169,7 @@
         await chrome.storage.sync.set({ [PROVIDER_KEY]: provider });
 
         // Hard reload all LMArena tabs to fetch fresh data from new provider
-        const tabs = await chrome.tabs.query({ url: 'https://lmarena.ai/*' });
+        const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
         for (const tab of tabs) {
             chrome.tabs.reload(tab.id, { bypassCache: true });
         }
@@ -191,7 +190,7 @@
         updateNotificationHint();
 
         // Notify content scripts
-        const tabs = await chrome.tabs.query({ url: 'https://lmarena.ai/*' });
+        const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
         for (const tab of tabs) {
             chrome.tabs.sendMessage(tab.id, {
                 type: 'BATTLE_NOTIFICATION_CHANGED',

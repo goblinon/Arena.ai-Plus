@@ -31,7 +31,7 @@ const COLUMN_TOOLTIPS = {
     },
     notification: {
         title: 'Generation Complete Alerts',
-        description: 'Get browser notifications when models finish generating.<br>Allow notifications on lmarena.ai when prompted!'
+        description: 'Get browser notifications when models finish generating.<br>Allow notifications on arena.ai when prompted!'
     }
 };
 
