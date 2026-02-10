@@ -1660,11 +1660,11 @@
     _formatContextWindow(tokens) {
       if (!tokens || tokens <= 0) return 'N/A';
       if (tokens >= 1000000) {
-        const value = tokens / 1000000;
-        return `${Number.isInteger(value) ? value : value.toFixed(1)}M`;
+        const value = parseFloat((tokens / 1000000).toFixed(1));
+        return `${value}M`;
       } else if (tokens >= 1000) {
-        const value = tokens / 1000;
-        return `${Number.isInteger(value) ? value : value.toFixed(1)}K`;
+        const value = parseFloat((tokens / 1000).toFixed(1));
+        return `${value}K`;
       }
       return tokens.toString();
     }
