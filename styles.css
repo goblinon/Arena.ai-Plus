@@ -48,36 +48,7 @@
 /* Shared Column Styles (Base Classes)         */
 /* ============================================ */
 
-/* Shared column header base */
-.lmarena-price-header,
-.lmarena-bfb-header,
-.lmarena-ctx-header,
-.lmarena-mod-header {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: inherit;
-  color: inherit;
-  white-space: nowrap;
-  text-align: left;
-  padding: 14px 8px;
-}
-
-/* Ensure header text matches native LMArena headers in both modes */
-html.dark .lmarena-price-header,
-html.dark .lmarena-bfb-header,
-html.dark .lmarena-ctx-header,
-html.dark .lmarena-mod-header,
-html.dark .lmarena-sort-button {
-  color: var(--lmp-text-primary);
-}
-
-html.light .lmarena-price-header,
-html.light .lmarena-bfb-header,
-html.light .lmarena-ctx-header,
-html.light .lmarena-mod-header,
-html.light .lmarena-sort-button {
-  color: #000;
-}
+/* Header styling inherited from native classes via _matchNativeHeaderStyles at runtime */
 
 /* Shared column cell base */
 .lmarena-price-cell,
@@ -163,18 +134,10 @@ html.light .lmarena-sort-button {
 /* ============================================ */
 
 .lmarena-sort-button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   background: none;
   border: none;
-  padding: 0;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: inherit;
-  color: inherit;
   cursor: pointer;
-  white-space: nowrap;
+  color: inherit;
 }
 
 .lmarena-sort-button:hover {

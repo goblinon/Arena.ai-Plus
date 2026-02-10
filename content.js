@@ -1253,9 +1253,17 @@
       return this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
     }
 
-    // Copy computed position, z-index, and background from a native <th> to our injected headers
+    // Copy native <th> classes onto our injected headers so they match exactly
     _matchNativeHeaderStyles(headerRow) {
-      const nativeTh = Array.from(headerRow.querySelectorAll('th')).find(
+      const allThs = Array.from(headerRow.querySelectorAll('th'));
+      const nativeTh = allThs.find(
+        (th, i) => i > 0 && i < allThs.length - 1 &&
+          !th.hasAttribute(CONFIG.COLUMN_MARKER) &&
+          !th.classList.contains('lmarena-price-header') &&
+          !th.classList.contains('lmarena-bfb-header') &&
+          !th.classList.contains('lmarena-ctx-header') &&
+          !th.classList.contains('lmarena-mod-header')
+      ) || allThs.find(
         th => !th.hasAttribute(CONFIG.COLUMN_MARKER) &&
           !th.classList.contains('lmarena-price-header') &&
           !th.classList.contains('lmarena-bfb-header') &&
@@ -1264,15 +1272,28 @@
       );
       if (!nativeTh) return;
 
-      const computed = window.getComputedStyle(nativeTh);
-      const props = ['position', 'top', 'zIndex', 'backgroundColor', 'boxShadow'];
+      const nativeClasses = Array.from(nativeTh.classList);
+
+      // Also get button classes from native header
+      const nativeButton = nativeTh.querySelector('button');
+      const nativeButtonClasses = nativeButton ? Array.from(nativeButton.classList) : [];
 
       const injectedHeaders = headerRow.querySelectorAll(
         '.lmarena-price-header, .lmarena-bfb-header, .lmarena-ctx-header, .lmarena-mod-header'
       );
       injectedHeaders.forEach(th => {
-        for (const prop of props) {
-          th.style[prop] = computed[prop];
+        // Add all native th classes while keeping our own (skip rounded/border to avoid artifacts)
+        for (const cls of nativeClasses) {
+          if (!cls.includes('rounded') && !cls.startsWith('border')) {
+            th.classList.add(cls);
+          }
+        }
+        // Copy native button classes onto our sort buttons
+        const ourButton = th.querySelector('.lmarena-sort-button');
+        if (ourButton && nativeButtonClasses.length > 0) {
+          for (const cls of nativeButtonClasses) {
+            ourButton.classList.add(cls);
+          }
         }
       });
     }
@@ -1531,6 +1552,17 @@
       td.className = 'lmarena-price-cell';
       td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
 
+      // Attach hover listeners once at injection time — they read stored data dynamically
+      td.onmouseenter = (e) => {
+        const pricingData = e.currentTarget._pricingData;
+        if (pricingData) {
+          this.tooltipManager.show(e.currentTarget, pricingData);
+        }
+      };
+      td.onmouseleave = () => {
+        this.tooltipManager.hide();
+      };
+
       this.injectedCells.push({ cell: td, modelName });
 
       // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
@@ -1699,6 +1731,17 @@
       td.className = 'lmarena-mod-cell';
       td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
 
+      // Attach hover listeners once at injection time — they read stored data dynamically
+      td.onmouseenter = (e) => {
+        const modData = e.currentTarget._modalityData;
+        if (modData) {
+          this.tooltipManager.showModalities(e.currentTarget, modData);
+        }
+      };
+      td.onmouseleave = () => {
+        this.tooltipManager.hide();
+      };
+
       this.injectedModalitiesCells.push({ cell: td, modelName });
 
       // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
@@ -1717,10 +1760,6 @@
       // Modalities always uses OpenRouter data via contextService
       const contextData = this.contextService.getContext(modelName);
 
-      // Clear any existing event listeners
-      cell.onmouseenter = null;
-      cell.onmouseleave = null;
-
       if (contextData && contextData.hasExplicitModalities) {
         const inputMods = contextData.input_modalities || ['text'];
         const outputMods = contextData.output_modalities || ['text'];
@@ -1732,16 +1771,6 @@
           input_modalities: inputMods,
           output_modalities: outputMods,
           sourceModelName: contextData.sourceModelName
-        };
-
-        cell.onmouseenter = (e) => {
-          const modData = e.currentTarget._modalityData;
-          if (modData) {
-            this.tooltipManager.showModalities(e.currentTarget, modData);
-          }
-        };
-        cell.onmouseleave = () => {
-          this.tooltipManager.hide();
         };
       } else {
         cell.textContent = 'N/A';
@@ -1787,10 +1816,6 @@
       const unitLabel = getTokenUnitLabel(currentTokenUnit);
       const row = cell.closest('tr');
 
-      // Clear any existing event listeners by cloning (cleanest way)
-      cell.onmouseenter = null;
-      cell.onmouseleave = null;
-
       if (pricing) {
         const inputCost = convertCostToUnit(pricing.input_cost_per_1m || 0, currentTokenUnit);
         const outputCost = convertCostToUnit(pricing.output_cost_per_1m || 0, currentTokenUnit);
@@ -1808,16 +1833,6 @@
 
         // Store pricing reference on the element for reliable access
         cell._pricingData = pricing;
-
-        cell.onmouseenter = (e) => {
-          const pricingData = e.currentTarget._pricingData;
-          if (pricingData) {
-            this.tooltipManager.show(e.currentTarget, pricingData);
-          }
-        };
-        cell.onmouseleave = () => {
-          this.tooltipManager.hide();
-        };
       } else {
         cell.textContent = 'N/A';
         cell.classList.add('lmarena-price-cell--na');
