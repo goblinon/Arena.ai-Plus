@@ -1245,9 +1245,36 @@
         this._injectBfbHeader(headerRow, showLoading);
         this._injectContextWindowHeader(headerRow, showLoading);
         this._injectModalitiesHeader(headerRow, showLoading);
+
+        // Copy sticky/background styles from native headers so ours scroll correctly
+        this._matchNativeHeaderStyles(headerRow);
       }
 
       return this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+    }
+
+    // Copy computed position, z-index, and background from a native <th> to our injected headers
+    _matchNativeHeaderStyles(headerRow) {
+      const nativeTh = Array.from(headerRow.querySelectorAll('th')).find(
+        th => !th.hasAttribute(CONFIG.COLUMN_MARKER) &&
+          !th.classList.contains('lmarena-price-header') &&
+          !th.classList.contains('lmarena-bfb-header') &&
+          !th.classList.contains('lmarena-ctx-header') &&
+          !th.classList.contains('lmarena-mod-header')
+      );
+      if (!nativeTh) return;
+
+      const computed = window.getComputedStyle(nativeTh);
+      const props = ['position', 'top', 'zIndex', 'backgroundColor', 'boxShadow'];
+
+      const injectedHeaders = headerRow.querySelectorAll(
+        '.lmarena-price-header, .lmarena-bfb-header, .lmarena-ctx-header, .lmarena-mod-header'
+      );
+      injectedHeaders.forEach(th => {
+        for (const prop of props) {
+          th.style[prop] = computed[prop];
+        }
+      });
     }
 
 
@@ -1633,9 +1660,11 @@
     _formatContextWindow(tokens) {
       if (!tokens || tokens <= 0) return 'N/A';
       if (tokens >= 1000000) {
-        return `${(tokens / 1000000).toFixed(tokens % 1000000 === 0 ? 0 : 1)}M`;
+        const value = tokens / 1000000;
+        return `${Number.isInteger(value) ? value : value.toFixed(1)}M`;
       } else if (tokens >= 1000) {
-        return `${(tokens / 1000).toFixed(tokens % 1000 === 0 ? 0 : 1)}K`;
+        const value = tokens / 1000;
+        return `${Number.isInteger(value) ? value : value.toFixed(1)}K`;
       }
       return tokens.toString();
     }

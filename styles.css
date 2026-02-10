@@ -59,7 +59,7 @@
   color: inherit;
   white-space: nowrap;
   text-align: left;
-  padding: 14px 24px;
+  padding: 14px 8px;
 }
 
 /* Ensure header text matches native LMArena headers in both modes */
@@ -87,7 +87,7 @@ html.light .lmarena-sort-button {
   font-family: inherit;
   font-size: 14px;
   color: inherit;
-  padding: 14px 24px;
+  padding: 14px 8px;
   white-space: nowrap;
   position: relative;
   display: table-cell;
