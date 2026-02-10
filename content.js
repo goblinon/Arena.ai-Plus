@@ -42,10 +42,7 @@
     DEFAULT_COLUMN_VISIBILITY: {
       'rank': true,
       'arena-score': true,
-      '95-ci': true,
       'votes': true,
-      'organization': true,
-      'license': true,
       'pricing': true,
       'bang-for-buck': true,
       'context-window': true,
@@ -148,10 +145,7 @@
     'rank': 0,
     'model': 1,
     'arena-score': 2,
-    '95-ci': 3,
-    'votes': 4,
-    'organization': 5,
-    'license': 6
+    'votes': 3
   };
 
   function applyColumnVisibility() {
@@ -190,21 +184,9 @@
         else if (text === 'arena score' || text === 'score' || text.includes('arena score')) {
           indexMap['arena-score'] = idx;
         }
-        // 95% CI
-        else if (text.includes('95%') || text.includes('ci') || text.includes('confidence')) {
-          indexMap['95-ci'] = idx;
-        }
         // Votes
         else if (text.includes('vote')) {
           indexMap['votes'] = idx;
-        }
-        // Organization
-        else if (text.includes('organization') || text.includes('org')) {
-          indexMap['organization'] = idx;
-        }
-        // License
-        else if (text.includes('license')) {
-          indexMap['license'] = idx;
         }
         // NOTE: Model column is NOT mapped - it should NEVER be hidden
       });
@@ -1548,7 +1530,9 @@
       let arenaScore = null;
       if (arenaScoreColumnIndex !== -1 && cells[arenaScoreColumnIndex]) {
         const scoreText = cells[arenaScoreColumnIndex].textContent.trim();
-        arenaScore = parseFloat(scoreText.replace(/[^0-9.-]/g, ''));
+        // parseFloat naturally stops at the first non-numeric char,
+        // so "1289 ±9" correctly parses as 1289
+        arenaScore = parseFloat(scoreText);
       }
 
       // Extract rank from first column (usually index 0)

@@ -21,10 +21,7 @@
     const DEFAULT_COLUMN_VISIBILITY = {
         'rank': true,
         'arena-score': true,
-        '95-ci': true,
         'votes': true,
-        'organization': true,
-        'license': true,
         'pricing': true,
         'bang-for-buck': true,
         'context-window': true,
