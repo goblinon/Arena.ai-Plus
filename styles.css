@@ -208,7 +208,8 @@ table td.lmarena-price-cell {
   text-align: right;
 }
 
-.lmarena-bfb-value {
+.lmarena-bfb-value,
+.lmarena-ctx-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   color: inherit;
   font-weight: 600;
@@ -226,12 +227,6 @@ table td.lmarena-bfb-cell {
 
 .lmarena-ctx-cell {
   text-align: right;
-}
-
-.lmarena-ctx-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  color: inherit;
-  font-weight: 600;
 }
 
 table th.lmarena-ctx-header,

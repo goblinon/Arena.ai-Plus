@@ -183,17 +183,8 @@
     // Battle notification toggle
     battleNotificationCheckbox.addEventListener('change', async () => {
         const enabled = battleNotificationCheckbox.checked;
-        await chrome.storage.sync.set({ [BATTLE_NOTIFICATION_KEY]: enabled });
+        await savePreference(BATTLE_NOTIFICATION_KEY, enabled, 'BATTLE_NOTIFICATION_CHANGED');
         updateNotificationHint();
-
-        // Notify content scripts
-        const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
-        for (const tab of tabs) {
-            chrome.tabs.sendMessage(tab.id, {
-                type: 'BATTLE_NOTIFICATION_CHANGED',
-                value: enabled
-            }).catch(() => { });
-        }
     });
 
     // Display version number

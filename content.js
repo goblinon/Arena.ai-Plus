@@ -141,12 +141,6 @@
   // ============================================
   // Column Visibility Helpers
   // ============================================
-  const COLUMN_NAME_TO_INDEX = {
-    'rank': 0,
-    'model': 1,
-    'arena-score': 2,
-    'votes': 3
-  };
 
   function applyColumnVisibility() {
     // Apply visibility to regular table columns
@@ -206,30 +200,18 @@
     });
 
     // Apply visibility to LMArena Plus columns
-    const pricingHeaders = document.querySelectorAll('.lmarena-price-header');
-    const pricingCells = document.querySelectorAll('.lmarena-price-cell');
-    const bfbHeaders = document.querySelectorAll('.lmarena-bfb-header');
-    const bfbCells = document.querySelectorAll('.lmarena-bfb-cell');
-    const ctxHeaders = document.querySelectorAll('.lmarena-ctx-header');
-    const ctxCells = document.querySelectorAll('.lmarena-ctx-cell');
-    const modHeaders = document.querySelectorAll('.lmarena-mod-header');
-    const modCells = document.querySelectorAll('.lmarena-mod-cell');
+    const columnVisibilityMap = {
+      pricing: { header: '.lmarena-price-header', cell: '.lmarena-price-cell' },
+      'bang-for-buck': { header: '.lmarena-bfb-header', cell: '.lmarena-bfb-cell' },
+      'context-window': { header: '.lmarena-ctx-header', cell: '.lmarena-ctx-cell' },
+      modalities: { header: '.lmarena-mod-header', cell: '.lmarena-mod-cell' }
+    };
 
-    const pricingVisible = currentColumnVisibility['pricing'];
-    const bfbVisible = currentColumnVisibility['bang-for-buck'];
-    const ctxVisible = currentColumnVisibility['context-window'];
-    const modVisible = currentColumnVisibility['modalities'];
-
-    pricingHeaders.forEach(el => el.style.display = pricingVisible ? '' : 'none');
-    pricingCells.forEach(el => el.style.display = pricingVisible ? '' : 'none');
-    bfbHeaders.forEach(el => el.style.display = bfbVisible ? '' : 'none');
-    bfbCells.forEach(el => el.style.display = bfbVisible ? '' : 'none');
-    ctxHeaders.forEach(el => el.style.display = ctxVisible ? '' : 'none');
-    ctxCells.forEach(el => el.style.display = ctxVisible ? '' : 'none');
-    modHeaders.forEach(el => el.style.display = modVisible ? '' : 'none');
-    modCells.forEach(el => el.style.display = modVisible ? '' : 'none');
-
-
+    for (const [key, selectors] of Object.entries(columnVisibilityMap)) {
+      const display = currentColumnVisibility[key] ? '' : 'none';
+      document.querySelectorAll(selectors.header).forEach(el => el.style.display = display);
+      document.querySelectorAll(selectors.cell).forEach(el => el.style.display = display);
+    }
   }
 
   // ============================================
@@ -267,13 +249,7 @@
     }
 
     start() {
-      console.log('[LMArena Plus] NotificationManager.start() called');
-      if (this.observer) {
-        console.log('[LMArena Plus] Observer already exists, returning');
-        return;
-      }
-
-      console.log('[LMArena Plus] Starting observation');
+      if (this.observer) return;
       this._startObserving();
     }
 
@@ -329,7 +305,6 @@
 
       // Only notify when buttons first appear (transition from false to true)
       if (votingButtonsVisible && !this.lastButtonState) {
-        console.log('[LMArena Plus] Generation complete, sending notification');
         this._sendNotification();
       }
 
@@ -337,37 +312,21 @@
     }
 
     async _sendNotification() {
-      console.log('[LMArena Plus] _sendNotification called');
-
-      if (!('Notification' in window)) {
-        console.log('[LMArena Plus] Notification API not available');
-        return;
-      }
-
-      console.log('[LMArena Plus] Notification.permission =', Notification.permission);
+      if (!('Notification' in window)) return;
 
       if (Notification.permission === 'default') {
-        console.log('[LMArena Plus] Requesting permission...');
         const permission = await Notification.requestPermission();
-        console.log('[LMArena Plus] Permission result:', permission);
         if (permission !== 'granted') return;
       }
 
-      if (Notification.permission !== 'granted') {
-        console.log('[LMArena Plus] Permission not granted, exiting');
-        return;
-      }
-
-      console.log('[LMArena Plus] document.visibilityState =', document.visibilityState);
+      if (Notification.permission !== 'granted') return;
 
       // Don't notify if tab is visible, just flash title
       if (document.visibilityState === 'visible') {
-        console.log('[LMArena Plus] Tab visible, flashing title only');
         this._flashTitle();
         return;
       }
 
-      console.log('[LMArena Plus] Creating notification...');
       const notification = new Notification('Arena.ai Ready! 🏆', {
         body: 'Generation complete - ready to vote!',
         icon: chrome.runtime.getURL('icons/icon128.png'),
@@ -375,7 +334,6 @@
         renotify: true,
         requireInteraction: false
       });
-      console.log('[LMArena Plus] Notification created:', notification);
 
       notification.onclick = () => {
         window.focus();
@@ -666,14 +624,11 @@
     async initialize(provider) {
       this.currentProvider = provider;
       this.isLoading = true;
-
-
       await this._fetchPricing(provider);
       this.isLoading = false;
     }
 
     async switchProvider(provider) {
-
       this.pricingMap.clear();
       this.currentProvider = provider;
       await this.initialize(provider);
@@ -709,8 +664,6 @@
           this._buildOpenRouterMap(data);
           break;
       }
-
-
     }
 
     _buildHeliconeMap(data) {
@@ -747,8 +700,7 @@
           input_cost_per_1m: (modelData.input_cost_per_token || 0) * 1000000,
           output_cost_per_1m: (modelData.output_cost_per_token || 0) * 1000000,
           operator: 'equals',
-          sourceModelName: modelName,
-          context_length: modelData.max_input_tokens || modelData.max_tokens || null
+          sourceModelName: modelName
         };
 
         if (!this.pricingMap.has(key)) {
@@ -776,8 +728,7 @@
           input_cost_per_1m: promptPrice * 1000000,
           output_cost_per_1m: completionPrice * 1000000,
           operator: 'equals',
-          sourceModelName: model.id,
-          context_length: model.context_length || null
+          sourceModelName: model.id
         };
 
         if (!this.pricingMap.has(key)) {
@@ -815,58 +766,47 @@
       document.body.appendChild(this.tooltip);
     }
 
-    show(element, pricing) {
-      // Cancel any pending hide
+    _prepareShow(element) {
       clearTimeout(this.hideTimeout);
-
-      // If showing for a different element, show immediately
       const isNewElement = this.currentElement !== element;
-      if (isNewElement) {
-        clearTimeout(this.showTimeout);
-      }
-
+      if (isNewElement) clearTimeout(this.showTimeout);
       this.currentElement = element;
+      return isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
+    }
 
-      const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
-
+    _showTooltipContent(element, html, delay) {
       this.showTimeout = setTimeout(() => {
-        const inputCost = convertCostToUnit(pricing.input_cost_per_1m || 0, currentTokenUnit);
-        const outputCost = convertCostToUnit(pricing.output_cost_per_1m || 0, currentTokenUnit);
-        const unitLabel = getTokenUnitLabel(currentTokenUnit);
-        const providerName = CONFIG.PROVIDERS[currentProvider]?.name || 'Unknown';
-
-        const sourceModelName = pricing.sourceModelName || 'Unknown model';
-
-        this.tooltip.innerHTML = `
-          <div class="lmarena-price-tooltip__total">
-            ${sourceModelName}
-          </div>
-          <div class="lmarena-price-tooltip__breakdown">
-            <div class="lmarena-price-tooltip__row">
-              <span class="lmarena-price-tooltip__label">Input tokens:</span>
-              <span class="lmarena-price-tooltip__value">$${formatCost(inputCost)}</span>
-            </div>
-            <div class="lmarena-price-tooltip__row">
-              <span class="lmarena-price-tooltip__label">Output tokens:</span>
-              <span class="lmarena-price-tooltip__value">$${formatCost(outputCost)}</span>
-            </div>
-          </div>
-          <div class="lmarena-price-tooltip__source">Source: ${providerName}</div>
-        `;
-
-        // Make visible first so we can measure properly
+        this.tooltip.innerHTML = html;
         this.tooltip.classList.add('lmarena-price-tooltip--visible');
+        requestAnimationFrame(() => this._positionTooltip(element));
+      }, delay);
+    }
 
-        // Position after content is set and visible
-        requestAnimationFrame(() => {
-          this._positionTooltip(element);
-        });
-      }, showDelay);
+    show(element, pricing) {
+      const delay = this._prepareShow(element);
+      const inputCost = convertCostToUnit(pricing.input_cost_per_1m || 0, currentTokenUnit);
+      const outputCost = convertCostToUnit(pricing.output_cost_per_1m || 0, currentTokenUnit);
+      const providerName = CONFIG.PROVIDERS[currentProvider]?.name || 'Unknown';
+      const sourceModelName = pricing.sourceModelName || 'Unknown model';
+
+      this._showTooltipContent(element, `
+        <div class="lmarena-price-tooltip__total">${sourceModelName}</div>
+        <div class="lmarena-price-tooltip__breakdown">
+          <div class="lmarena-price-tooltip__row">
+            <span class="lmarena-price-tooltip__label">Input tokens:</span>
+            <span class="lmarena-price-tooltip__value">$${formatCost(inputCost)}</span>
+          </div>
+          <div class="lmarena-price-tooltip__row">
+            <span class="lmarena-price-tooltip__label">Output tokens:</span>
+            <span class="lmarena-price-tooltip__value">$${formatCost(outputCost)}</span>
+          </div>
+        </div>
+        <div class="lmarena-price-tooltip__source">Source: ${providerName}</div>
+      `, delay);
     }
 
     hide() {
       clearTimeout(this.showTimeout);
-
       this.hideTimeout = setTimeout(() => {
         this.tooltip.classList.remove('lmarena-price-tooltip--visible');
         this.currentElement = null;
@@ -874,61 +814,30 @@
     }
 
     showModalities(element, modData) {
-      // Cancel any pending hide
-      clearTimeout(this.hideTimeout);
+      const delay = this._prepareShow(element);
+      const inputMods = modData.input_modalities || ['text'];
+      const outputMods = modData.output_modalities || ['text'];
 
-      // If showing for a different element, show immediately
-      const isNewElement = this.currentElement !== element;
-      if (isNewElement) {
-        clearTimeout(this.showTimeout);
-      }
+      const MODALITY_NAMES = { text: 'Text', image: 'Image', audio: 'Audio', video: 'Video', file: 'File' };
+      const formatRow = (mods) => mods.map(k => MODALITY_NAMES[k] || k).join(', ') || 'None';
 
-      this.currentElement = element;
-
-      const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
-
-      this.showTimeout = setTimeout(() => {
-        const inputMods = modData.input_modalities || ['text'];
-        const outputMods = modData.output_modalities || ['text'];
-
-        const formatModality = (key) => {
-          const names = { text: 'Text', image: 'Image', audio: 'Audio', video: 'Video', file: 'File' };
-          return names[key] || key;
-        };
-
-        const formatRow = (mods) => {
-          const supported = mods.map(key => formatModality(key));
-          return supported.length > 0 ? supported.join(', ') : 'None';
-        };
-
-        this.tooltip.innerHTML = `
-          <div class="lmarena-price-tooltip__total">
-            Modalities
+      this._showTooltipContent(element, `
+        <div class="lmarena-price-tooltip__total">Modalities</div>
+        <div class="lmarena-price-tooltip__explanation">
+          Shows which data types this model can process and generate
+        </div>
+        <div class="lmarena-price-tooltip__breakdown">
+          <div class="lmarena-price-tooltip__row">
+            <span class="lmarena-price-tooltip__label">Input:</span>
+            <span class="lmarena-price-tooltip__value">${formatRow(inputMods)}</span>
           </div>
-          <div class="lmarena-price-tooltip__explanation">
-            Shows which data types this model can process and generate
+          <div class="lmarena-price-tooltip__row">
+            <span class="lmarena-price-tooltip__label">Output:</span>
+            <span class="lmarena-price-tooltip__value">${formatRow(outputMods)}</span>
           </div>
-          <div class="lmarena-price-tooltip__breakdown">
-            <div class="lmarena-price-tooltip__row">
-              <span class="lmarena-price-tooltip__label">Input:</span>
-              <span class="lmarena-price-tooltip__value">${formatRow(inputMods)}</span>
-            </div>
-            <div class="lmarena-price-tooltip__row">
-              <span class="lmarena-price-tooltip__label">Output:</span>
-              <span class="lmarena-price-tooltip__value">${formatRow(outputMods)}</span>
-            </div>
-          </div>
-          <div class="lmarena-price-tooltip__source">Source: OpenRouter</div>
-        `;
-
-        // Make visible first so we can measure properly
-        this.tooltip.classList.add('lmarena-price-tooltip--visible');
-
-        // Position after content is set and visible
-        requestAnimationFrame(() => {
-          this._positionTooltip(element);
-        });
-      }, showDelay);
+        </div>
+        <div class="lmarena-price-tooltip__source">Source: OpenRouter</div>
+      `, delay);
     }
 
     _positionTooltip(element) {
@@ -938,7 +847,6 @@
       const tooltipRect = this.tooltip.getBoundingClientRect();
 
       let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-      // Position above the element by default
       let top = rect.top - tooltipRect.height - 8;
 
       const padding = 10;
@@ -946,49 +854,22 @@
       if (left + tooltipRect.width > window.innerWidth - padding) {
         left = window.innerWidth - tooltipRect.width - padding;
       }
-
-      // Fallback to below if not enough space above
-      if (top < padding) {
-        top = rect.bottom + 8;
-      }
+      if (top < padding) top = rect.bottom + 8;
 
       this.tooltip.style.left = `${left}px`;
       this.tooltip.style.top = `${top}px`;
     }
 
     showHeaderInfo(element, columnType) {
-      // Cancel any pending hide
-      clearTimeout(this.hideTimeout);
+      const delay = this._prepareShow(element);
+      const info = COLUMN_TOOLTIPS[columnType];
+      if (!info) return;
 
-      const isNewElement = this.currentElement !== element;
-      if (isNewElement) {
-        clearTimeout(this.showTimeout);
-      }
-
-      this.currentElement = element;
-
-      const showDelay = isNewElement ? CONFIG.TOOLTIP_SHOW_DELAY : 0;
-
-      this.showTimeout = setTimeout(() => {
-        const info = COLUMN_TOOLTIPS[columnType];
-        if (!info) return;
-
-        this.tooltip.innerHTML = `
-          <div class="lmarena-price-tooltip__total">
-            ${info.title}
-          </div>
-          <div class="lmarena-price-tooltip__explanation">
-            ${info.description}
-          </div>
-          <div class="lmarena-price-tooltip__source">Click to sort (where available)</div>
-        `;
-
-        this.tooltip.classList.add('lmarena-price-tooltip--visible');
-
-        requestAnimationFrame(() => {
-          this._positionTooltip(element);
-        });
-      }, showDelay);
+      this._showTooltipContent(element, `
+        <div class="lmarena-price-tooltip__total">${info.title}</div>
+        <div class="lmarena-price-tooltip__explanation">${info.description}</div>
+        <div class="lmarena-price-tooltip__source">Click to sort (where available)</div>
+      `, delay);
     }
   }
 
@@ -1142,14 +1023,6 @@
         // Get the sort value property name based on column type
         const valueKey = this._getValueKey(columnType);
 
-        // Debug: check how many rows have values
-        const rowsWithValues = rows.filter(r => r[valueKey] != null).length;
-
-
-        // Debug: log first few row values
-        rows.slice(0, 5).forEach((row, idx) => {
-
-        });
 
         // Sort rows
         rows.sort((a, b) => {
@@ -1253,42 +1126,35 @@
       return this._processUnprocessedRows(table, modelColumnIndex, arenaScoreColumnIndex, showLoading);
     }
 
+    // Check if a th is one of our injected headers
+    _isInjectedHeader(th) {
+      return th.hasAttribute(CONFIG.COLUMN_MARKER) ||
+        th.classList.contains('lmarena-price-header') ||
+        th.classList.contains('lmarena-bfb-header') ||
+        th.classList.contains('lmarena-ctx-header') ||
+        th.classList.contains('lmarena-mod-header');
+    }
+
     // Copy native <th> classes onto our injected headers so they match exactly
     _matchNativeHeaderStyles(headerRow) {
       const allThs = Array.from(headerRow.querySelectorAll('th'));
       const nativeTh = allThs.find(
-        (th, i) => i > 0 && i < allThs.length - 1 &&
-          !th.hasAttribute(CONFIG.COLUMN_MARKER) &&
-          !th.classList.contains('lmarena-price-header') &&
-          !th.classList.contains('lmarena-bfb-header') &&
-          !th.classList.contains('lmarena-ctx-header') &&
-          !th.classList.contains('lmarena-mod-header')
-      ) || allThs.find(
-        th => !th.hasAttribute(CONFIG.COLUMN_MARKER) &&
-          !th.classList.contains('lmarena-price-header') &&
-          !th.classList.contains('lmarena-bfb-header') &&
-          !th.classList.contains('lmarena-ctx-header') &&
-          !th.classList.contains('lmarena-mod-header')
-      );
+        (th, i) => i > 0 && i < allThs.length - 1 && !this._isInjectedHeader(th)
+      ) || allThs.find(th => !this._isInjectedHeader(th));
       if (!nativeTh) return;
 
       const nativeClasses = Array.from(nativeTh.classList);
-
-      // Also get button classes from native header
       const nativeButton = nativeTh.querySelector('button');
       const nativeButtonClasses = nativeButton ? Array.from(nativeButton.classList) : [];
 
-      const injectedHeaders = headerRow.querySelectorAll(
+      headerRow.querySelectorAll(
         '.lmarena-price-header, .lmarena-bfb-header, .lmarena-ctx-header, .lmarena-mod-header'
-      );
-      injectedHeaders.forEach(th => {
-        // Add all native th classes while keeping our own (skip rounded/border to avoid artifacts)
+      ).forEach(th => {
         for (const cls of nativeClasses) {
           if (!cls.includes('rounded') && !cls.startsWith('border')) {
             th.classList.add(cls);
           }
         }
-        // Copy native button classes onto our sort buttons
         const ourButton = th.querySelector('.lmarena-sort-button');
         if (ourButton && nativeButtonClasses.length > 0) {
           for (const cls of nativeButtonClasses) {
@@ -1400,7 +1266,7 @@
           if (!tableGroups.has(table)) {
             tableGroups.set(table, []);
           }
-          tableGroups.set(table, [...tableGroups.get(table), { cell, value: bfbValue }]);
+          tableGroups.get(table).push({ cell, value: bfbValue });
         }
       }
 
@@ -1989,8 +1855,6 @@
   let pricingService, contextService, tooltipManager, loadingManager, sortManager, columnInjector, tableObserver, notificationManager;
 
   async function init() {
-
-
     await loadPreferences();
 
     pricingService = new PricingService();
@@ -2005,30 +1869,20 @@
     tableObserver.reprocessAll(true);
 
     // Fetch pricing and context data in parallel
-    // Context always from OpenRouter, pricing from selected provider
     await Promise.all([
       pricingService.initialize(currentProvider),
       contextService.initialize()
     ]);
 
-
-    // Update cells with actual data
     columnInjector.updateAllCells();
-
-    // Apply column visibility preferences
     applyColumnVisibility();
-
-    // Start observing for new tables and rows
     tableObserver.start();
 
     // Initialize notification manager
     notificationManager = new NotificationManager();
-    console.log('[LMArena Plus] NotificationManager created, enabled:', battleNotificationEnabled);
     if (battleNotificationEnabled) {
       notificationManager.start();
-      console.log('[LMArena Plus] NotificationManager started');
     }
-
 
     // Listen for preference changes from popup
     chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -2036,21 +1890,15 @@
         currentTokenUnit = message.value;
         columnInjector.updatePricingHeader();
         columnInjector.updateAllCells();
-
       } else if (message.type === 'PROVIDER_CHANGED') {
         currentProvider = message.value;
-
-
         columnInjector.setAllCellsLoading();
         await pricingService.switchProvider(currentProvider);
         columnInjector.updateAllCells();
         applyColumnVisibility();
-
-
       } else if (message.type === 'COLUMN_VISIBILITY_CHANGED') {
         currentColumnVisibility = message.value;
         applyColumnVisibility();
-
       } else if (message.type === 'BATTLE_NOTIFICATION_CHANGED') {
         battleNotificationEnabled = message.value;
         if (notificationManager) {
