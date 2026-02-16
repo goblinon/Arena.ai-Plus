@@ -1151,7 +1151,9 @@
         '.lmarena-price-header, .lmarena-bfb-header, .lmarena-ctx-header, .lmarena-mod-header'
       ).forEach(th => {
         for (const cls of nativeClasses) {
-          if (!cls.includes('rounded') && !cls.startsWith('border')) {
+          if (!cls.includes('rounded') && !cls.startsWith('border') &&
+            !cls.startsWith('w-') && !cls.startsWith('min-w') && !cls.startsWith('max-w') &&
+            !cls.startsWith('px-') && !cls.startsWith('py-') && !cls.match(/^p-\d/)) {
             th.classList.add(cls);
           }
         }
@@ -1190,7 +1192,7 @@
         // Preserve the current sort icon state
         const iconContainer = this.pricingHeaderButton.querySelector('.lmarena-sort-icon-container');
         const currentIcon = iconContainer ? iconContainer.innerHTML : SORT_ICONS.default;
-        this.pricingHeaderButton.innerHTML = `Pricing per ${unitLabel} <span class="lmarena-sort-icon-container">${currentIcon}</span>`;
+        this.pricingHeaderButton.innerHTML = `Pricing <span class="lmarena-sort-icon-container">${currentIcon}</span>`;
       }
     }
 
@@ -1363,7 +1365,7 @@
       const button = document.createElement('button');
       button.className = 'lmarena-sort-button';
       const unitLabel = getTokenUnitLabel(currentTokenUnit);
-      button.innerHTML = `Pricing per ${unitLabel} <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.innerHTML = `Pricing <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
       button.addEventListener('click', () => this.sortManager.toggleSort('pricing'));
 
       // Store reference to the button for dynamic updates

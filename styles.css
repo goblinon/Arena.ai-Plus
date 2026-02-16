@@ -54,11 +54,18 @@
 .lmarena-price-cell,
 .lmarena-bfb-cell,
 .lmarena-ctx-cell,
-.lmarena-mod-cell {
+.lmarena-mod-cell,
+.lmarena-price-header,
+.lmarena-bfb-header,
+.lmarena-ctx-header,
+.lmarena-mod-header {
   font-family: inherit;
   font-size: 14px;
   color: inherit;
-  padding: 14px 8px;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
   white-space: nowrap;
   position: relative;
   display: table-cell;
@@ -196,8 +203,7 @@
 
 table th.lmarena-price-header,
 table td.lmarena-price-cell {
-  min-width: 140px;
-  max-width: 200px;
+  width: 100px !important;
 }
 
 /* ============================================ */
@@ -217,8 +223,7 @@ table td.lmarena-price-cell {
 
 table th.lmarena-bfb-header,
 table td.lmarena-bfb-cell {
-  min-width: 120px;
-  max-width: 180px;
+  width: 105px !important;
 }
 
 /* ============================================ */
@@ -231,8 +236,7 @@ table td.lmarena-bfb-cell {
 
 table th.lmarena-ctx-header,
 table td.lmarena-ctx-cell {
-  min-width: 80px;
-  max-width: 120px;
+  width: 105px !important;
 }
 
 /* ============================================ */
@@ -282,8 +286,7 @@ html.light .lmarena-mod-icon {
 
 table th.lmarena-mod-header,
 table td.lmarena-mod-cell {
-  min-width: 100px;
-  max-width: 200px;
+  width: 100px !important;
 }
 
 /* ============================================ */
