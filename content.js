@@ -1167,12 +1167,10 @@
             th.classList.add(cls);
           }
         }
-        const ourButton = th.querySelector('.lmarena-sort-button');
-        if (ourButton && nativeButtonClasses.length > 0) {
-          for (const cls of nativeButtonClasses) {
-            ourButton.classList.add(cls);
-          }
-        }
+        // Apply font-medium and text-xs at the th level so ALL headers
+        // match native styling, regardless of having a sort button
+        th.classList.remove('font-normal');
+        th.classList.add('font-medium', 'text-xs');
       });
     }
 

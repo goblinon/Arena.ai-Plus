@@ -157,8 +157,6 @@
   border: none;
   cursor: pointer;
   color: inherit;
-  font-weight: 500;
-  font-size: 12px;
 }
 
 .lmarena-sort-button:hover {
@@ -279,11 +277,6 @@ table td.lmarena-ctx-cell {
 .lmarena-mod-cell {
   text-align: left;
   padding: 14px 16px;
-}
-
-.lmarena-mod-header {
-  font-weight: 500 !important;
-  font-size: 12px !important;
 }
 
 .lmarena-mod-container {
