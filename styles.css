@@ -61,8 +61,9 @@
 .lmarena-age-header,
 .lmarena-ctx-header,
 .lmarena-mod-header {
-  font-family: inherit;
+  font-family: baselGrotesk, "baselGrotesk Fallback", ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
+  line-height: 20px;
   color: inherit;
   padding-top: 14px !important;
   padding-bottom: 14px !important;
@@ -156,6 +157,8 @@
   border: none;
   cursor: pointer;
   color: inherit;
+  font-weight: 500;
+  font-size: 12px;
 }
 
 .lmarena-sort-button:hover {
@@ -200,7 +203,7 @@
 
 .lmarena-price-total {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 400;
   color: inherit;
   line-height: 1.2;
 }
@@ -227,9 +230,9 @@ table td.lmarena-price-cell {
 
 .lmarena-bfb-value,
 .lmarena-ctx-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: baselGroteskMono, "baselGroteskMono Fallback", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: inherit;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 table th.lmarena-bfb-header,
@@ -246,9 +249,9 @@ table td.lmarena-bfb-cell {
 }
 
 .lmarena-age-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: baselGroteskMono, "baselGroteskMono Fallback", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: inherit;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 table th.lmarena-age-header,
@@ -276,6 +279,11 @@ table td.lmarena-ctx-cell {
 .lmarena-mod-cell {
   text-align: left;
   padding: 14px 16px;
+}
+
+.lmarena-mod-header {
+  font-weight: 500 !important;
+  font-size: 12px !important;
 }
 
 .lmarena-mod-container {
@@ -377,7 +385,7 @@ table td.lmarena-mod-cell {
 }
 
 .lmarena-price-tooltip__value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: baselGroteskMono, "baselGroteskMono Fallback", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: var(--lmp-accent-green);
 }
 
