@@ -24,6 +24,7 @@
         'votes': true,
         'pricing': true,
         'bang-for-buck': true,
+        'model-age': true,
         'context-window': true,
         'modalities': true
     };

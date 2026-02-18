@@ -45,6 +45,7 @@
       'votes': true,
       'pricing': true,
       'bang-for-buck': true,
+      'model-age': true,
       'context-window': true,
       'modalities': true
     }
@@ -161,6 +162,7 @@
         }
         if (header.classList.contains('lmarena-price-header') ||
           header.classList.contains('lmarena-bfb-header') ||
+          header.classList.contains('lmarena-age-header') ||
           header.classList.contains('lmarena-ctx-header') ||
           header.classList.contains('lmarena-mod-header')) {
           return;
@@ -203,6 +205,7 @@
     const columnVisibilityMap = {
       pricing: { header: '.lmarena-price-header', cell: '.lmarena-price-cell' },
       'bang-for-buck': { header: '.lmarena-bfb-header', cell: '.lmarena-bfb-cell' },
+      'model-age': { header: '.lmarena-age-header', cell: '.lmarena-age-cell' },
       'context-window': { header: '.lmarena-ctx-header', cell: '.lmarena-ctx-cell' },
       modalities: { header: '.lmarena-mod-header', cell: '.lmarena-mod-cell' }
     };
@@ -222,6 +225,7 @@
       const classMap = {
         'price': 'lmarena-price-cell--loading',
         'bfb': 'lmarena-bfb-cell--loading',
+        'age': 'lmarena-age-cell--loading',
         'ctx': 'lmarena-ctx-cell--loading',
         'mod': 'lmarena-mod-cell--loading'
       };
@@ -231,7 +235,7 @@
         if (loading) {
           cell.textContent = 'Loading';
           cell.classList.add(loadingClass);
-          cell.classList.remove('lmarena-price-cell--na', 'lmarena-bfb-cell--na', 'lmarena-ctx-cell--na', 'lmarena-mod-cell--na');
+          cell.classList.remove('lmarena-price-cell--na', 'lmarena-bfb-cell--na', 'lmarena-age-cell--na', 'lmarena-ctx-cell--na', 'lmarena-mod-cell--na');
         } else {
           cell.classList.remove(loadingClass);
         }
@@ -589,6 +593,7 @@
         const hasExplicitModalities = !!(model.architecture?.input_modalities || model.architecture?.output_modalities);
         const contextData = {
           context_length: model.context_length || null,
+          created: model.created || null,
           input_modalities: model.architecture?.input_modalities || ['text'],
           output_modalities: model.architecture?.output_modalities || ['text'],
           hasExplicitModalities: hasExplicitModalities,
@@ -902,6 +907,7 @@
         // Check if this is a native header (not our injected ones)
         if (th.classList.contains('lmarena-price-header') ||
           th.classList.contains('lmarena-bfb-header') ||
+          th.classList.contains('lmarena-age-header') ||
           th.classList.contains('lmarena-ctx-header') ||
           th.classList.contains('lmarena-mod-header')) {
           return;
@@ -1070,6 +1076,7 @@
       switch (columnType) {
         case 'pricing': return '_lmarenaPlusPricing';
         case 'bfb': return '_lmarenaPlusBfb';
+        case 'age': return '_lmarenaPlusAge';
         case 'ctx': return '_lmarenaPlusCtx';
         case 'mod': return '_lmarenaPlusMod';
         default: return '_lmarenaPlusPricing';
@@ -1090,6 +1097,7 @@
       this.processedTables = new WeakSet();
       this.injectedCells = [];
       this.injectedBfbCells = [];
+      this.injectedAgeCells = [];
       this.injectedContextWindowCells = [];
       this.injectedModalitiesCells = [];
     }
@@ -1116,6 +1124,7 @@
         // Always inject headers if they don't exist in DOM
         this._injectHeader(headerRow, showLoading);
         this._injectBfbHeader(headerRow, showLoading);
+        this._injectModelAgeHeader(headerRow, showLoading);
         this._injectContextWindowHeader(headerRow, showLoading);
         this._injectModalitiesHeader(headerRow, showLoading);
 
@@ -1128,11 +1137,12 @@
 
     // Check if a th is one of our injected headers
     _isInjectedHeader(th) {
-      return th.hasAttribute(CONFIG.COLUMN_MARKER) ||
-        th.classList.contains('lmarena-price-header') ||
+      return th.classList.contains('lmarena-price-header') ||
         th.classList.contains('lmarena-bfb-header') ||
+        th.classList.contains('lmarena-age-header') ||
         th.classList.contains('lmarena-ctx-header') ||
-        th.classList.contains('lmarena-mod-header');
+        th.classList.contains('lmarena-mod-header') ||
+        (th.hasAttribute && th.hasAttribute(CONFIG.COLUMN_MARKER));
     }
 
     // Copy native <th> classes onto our injected headers so they match exactly
@@ -1148,7 +1158,7 @@
       const nativeButtonClasses = nativeButton ? Array.from(nativeButton.classList) : [];
 
       headerRow.querySelectorAll(
-        '.lmarena-price-header, .lmarena-bfb-header, .lmarena-ctx-header, .lmarena-mod-header'
+        '.lmarena-price-header, .lmarena-bfb-header, .lmarena-age-header, .lmarena-ctx-header, .lmarena-mod-header'
       ).forEach(th => {
         for (const cls of nativeClasses) {
           if (!cls.includes('rounded') && !cls.startsWith('border') &&
@@ -1179,6 +1189,7 @@
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
         this._injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+        this._injectModelAgeCell(row, modelColumnIndex, showLoading);
         this._injectContextWindowCell(row, modelColumnIndex, showLoading);
         this._injectModalitiesCell(row, modelColumnIndex, showLoading);
       });
@@ -1218,6 +1229,16 @@
 
       // Add medal emojis to top 3 BfB cells per table
       this._addBfbMedals();
+
+      // Update Model Age cells
+      for (const cellData of this.injectedAgeCells) {
+        const { cell, modelName } = cellData;
+
+        if (!cell.isConnected) continue;
+
+        cell.classList.remove('lmarena-age-cell--loading');
+        this._updateModelAgeCellContent(cell, modelName);
+      }
 
       // Update Context Window cells
       for (const cellData of this.injectedContextWindowCells) {
@@ -1292,10 +1313,12 @@
     setAllCellsLoading() {
       const cells = this.injectedCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const bfbCells = this.injectedBfbCells.filter(c => c.cell.isConnected).map(c => c.cell);
+      const ageCells = this.injectedAgeCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const ctxCells = this.injectedContextWindowCells.filter(c => c.cell.isConnected).map(c => c.cell);
       const modCells = this.injectedModalitiesCells.filter(c => c.cell.isConnected).map(c => c.cell);
       this.loadingManager.setLoading(cells, true, 'price');
       this.loadingManager.setLoading(bfbCells, true, 'bfb');
+      this.loadingManager.setLoading(ageCells, true, 'age');
       this.loadingManager.setLoading(ctxCells, true, 'ctx');
       this.loadingManager.setLoading(modCells, true, 'mod');
     }
@@ -1307,11 +1330,12 @@
       document.querySelectorAll(`[${CONFIG.ROW_MARKER}]`).forEach(el => {
         el.removeAttribute(CONFIG.ROW_MARKER);
       });
-      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-bfb-header, .lmarena-bfb-cell, .lmarena-ctx-header, .lmarena-ctx-cell, .lmarena-mod-header, .lmarena-mod-cell').forEach(el => {
+      document.querySelectorAll('.lmarena-price-header, .lmarena-price-cell, .lmarena-bfb-header, .lmarena-bfb-cell, .lmarena-age-header, .lmarena-age-cell, .lmarena-ctx-header, .lmarena-ctx-cell, .lmarena-mod-header, .lmarena-mod-cell').forEach(el => {
         el.remove();
       });
       this.injectedCells = [];
       this.injectedBfbCells = [];
+      this.injectedAgeCells = [];
       this.injectedContextWindowCells = [];
       this.injectedModalitiesCells = [];
       this.processedTables = new WeakSet();
@@ -1486,6 +1510,77 @@
         td.classList.add('lmarena-bfb-cell--loading');
       } else {
         this._updateBfbCellContent(td, modelName, arenaScore, rank);
+      }
+    }
+
+    _injectModelAgeHeader(headerRow, showLoading) {
+      if (headerRow.querySelector('.lmarena-age-header')) return;
+
+      const th = document.createElement('th');
+      th.className = 'lmarena-age-header';
+
+      // Create sortable button
+      const button = document.createElement('button');
+      button.className = 'lmarena-sort-button';
+      button.innerHTML = `Model Age <span class="lmarena-sort-icon-container">${SORT_ICONS.default}</span>`;
+      button.addEventListener('click', () => this.sortManager.toggleSort('age'));
+
+      // Add tooltip hover
+      th.addEventListener('mouseenter', () => this.tooltipManager.showHeaderInfo(th, 'age'));
+      th.addEventListener('mouseleave', () => this.tooltipManager.hide());
+
+      th.appendChild(button);
+      th.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+      headerRow.appendChild(th);
+
+      // Register with sort manager
+      this.sortManager.registerHeader('age', button);
+    }
+
+    _injectModelAgeCell(row, modelColumnIndex, showLoading) {
+      if (row.querySelector('.lmarena-age-cell')) return;
+
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 0) return;
+
+      const modelCell = cells[modelColumnIndex] || cells[0];
+      const modelName = this._extractModelName(modelCell);
+
+      const td = document.createElement('td');
+      td.className = 'lmarena-age-cell';
+      td.setAttribute(CONFIG.COLUMN_MARKER, 'true');
+
+      this.injectedAgeCells.push({ cell: td, modelName });
+
+      // IMPORTANT: Append to row BEFORE updating content, so cell.closest('tr') works
+      row.appendChild(td);
+
+      if (showLoading) {
+        td.textContent = 'Loading';
+        td.classList.add('lmarena-age-cell--loading');
+      } else {
+        this._updateModelAgeCellContent(td, modelName);
+      }
+    }
+
+    _updateModelAgeCellContent(cell, modelName) {
+      const contextData = this.contextService.getContext(modelName);
+      const row = cell.closest('tr');
+
+      if (contextData && contextData.created) {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const ageDays = Math.floor((nowSeconds - contextData.created) / 86400);
+        const label = ageDays === 1 ? '1 day' : `${ageDays} days`;
+
+        cell.innerHTML = `<span class="lmarena-age-value">${label}</span>`;
+        cell.classList.remove('lmarena-age-cell--na');
+
+        // Store numeric value for sorting
+        if (row) row._lmarenaPlusAge = ageDays;
+      } else {
+        cell.textContent = 'N/A';
+        cell.classList.add('lmarena-age-cell--na');
+        if (row) row._lmarenaPlusAge = null;
       }
     }
 

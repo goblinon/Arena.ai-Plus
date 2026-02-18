@@ -53,10 +53,12 @@
 /* Shared column cell base */
 .lmarena-price-cell,
 .lmarena-bfb-cell,
+.lmarena-age-cell,
 .lmarena-ctx-cell,
 .lmarena-mod-cell,
 .lmarena-price-header,
 .lmarena-bfb-header,
+.lmarena-age-header,
 .lmarena-ctx-header,
 .lmarena-mod-header {
   font-family: inherit;
@@ -75,6 +77,7 @@
 /* Shared hover effect */
 .lmarena-price-cell:hover,
 .lmarena-bfb-cell:hover,
+.lmarena-age-cell:hover,
 .lmarena-ctx-cell:hover,
 .lmarena-mod-cell:hover {
   background-color: var(--lmp-hover-glow);
@@ -83,6 +86,7 @@
 /* Shared N/A state */
 .lmarena-price-cell--na,
 .lmarena-bfb-cell--na,
+.lmarena-age-cell--na,
 .lmarena-ctx-cell--na,
 .lmarena-mod-cell--na {
   color: var(--lmp-text-subtle);
@@ -92,6 +96,7 @@
 /* Shared loading state base */
 .lmarena-price-cell--loading,
 .lmarena-bfb-cell--loading,
+.lmarena-age-cell--loading,
 .lmarena-ctx-cell--loading,
 .lmarena-mod-cell--loading {
   color: var(--lmp-text-disabled);
@@ -100,6 +105,7 @@
 /* Shared loading spinner base */
 .lmarena-price-cell--loading::after,
 .lmarena-bfb-cell--loading::after,
+.lmarena-age-cell--loading::after,
 .lmarena-ctx-cell--loading::after,
 .lmarena-mod-cell--loading::after {
   content: '';
@@ -118,6 +124,11 @@
 .lmarena-bfb-cell--loading::after {
   border-top-color: var(--lmp-accent-green);
   /* Green */
+}
+
+.lmarena-age-cell--loading::after {
+  border-top-color: var(--lmp-accent-blue);
+  /* Blue */
 }
 
 .lmarena-ctx-cell--loading::after {
@@ -224,6 +235,25 @@ table td.lmarena-price-cell {
 table th.lmarena-bfb-header,
 table td.lmarena-bfb-cell {
   width: 105px !important;
+}
+
+/* ============================================ */
+/* Model Age Column Specifics */
+/* ============================================ */
+
+.lmarena-age-cell {
+  text-align: right;
+}
+
+.lmarena-age-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: inherit;
+  font-weight: 600;
+}
+
+table th.lmarena-age-header,
+table td.lmarena-age-cell {
+  width: 95px !important;
 }
 
 /* ============================================ */

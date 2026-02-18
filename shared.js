@@ -29,6 +29,10 @@ const COLUMN_TOOLTIPS = {
         title: 'Modalities',
         description: 'Data types the model can handle. Top row: inputs. Bottom row: outputs.'
     },
+    'model-age': {
+        title: 'Model Age',
+        description: 'Number of days since this model became available on OpenRouter.'
+    },
     notification: {
         title: 'Generation Complete Alerts',
         description: 'Get browser notifications when models finish generating.<br>Allow notifications on arena.ai when prompted!'
@@ -39,6 +43,7 @@ const COLUMN_TOOLTIPS = {
 COLUMN_TOOLTIPS.bfb = COLUMN_TOOLTIPS['bang-for-buck'];
 COLUMN_TOOLTIPS.ctx = COLUMN_TOOLTIPS['context-window'];
 COLUMN_TOOLTIPS.mod = COLUMN_TOOLTIPS.modalities;
+COLUMN_TOOLTIPS.age = COLUMN_TOOLTIPS['model-age'];
 
 // Battle notification settings
 const BATTLE_NOTIFICATION_KEY = 'lmarena-battle-notification';
