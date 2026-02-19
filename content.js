@@ -1279,7 +1279,7 @@
 
     _addBfbMedals() {
       const MEDALS = ['🥇', '🥈', '🥉'];
-      const MEDAL_REGEX = /^[🥇🥈🥉]\s*/;
+      const MEDAL_REGEX = /^(?:🥇|🥈|🥉)\s*/u;
 
       // Group BfB cells by their parent table
       const tableGroups = new Map();
