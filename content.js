@@ -1385,6 +1385,7 @@
       return cells.length > 0 ? 0 : -1;
     }
 
+
     _findArenaScoreColumnIndex(headerRow) {
       const cells = headerRow.querySelectorAll('th, td');
 
@@ -1507,10 +1508,12 @@
         arenaScore = parseFloat(scoreText);
       }
 
-      // Extract rank from first column (usually index 0)
+      // In Labs view, column 0 is Lab Rank and column 1 is Model Rank.
+      // Always use the model rank for BfB calculation.
       let rank = 1;
-      if (cells[0]) {
-        const rankText = cells[0].textContent.trim();
+      const rankColIdx = isLabsView() ? 1 : 0;
+      if (cells[rankColIdx]) {
+        const rankText = cells[rankColIdx].textContent.trim();
         const parsedRank = parseInt(rankText.replace(/[^0-9]/g, ''), 10);
         if (!isNaN(parsedRank) && parsedRank > 0) {
           rank = parsedRank;
