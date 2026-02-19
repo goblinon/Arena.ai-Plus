@@ -62,6 +62,14 @@
     return new URLSearchParams(window.location.search).get('rankBy') === 'labs';
   }
 
+  // Plain /leaderboard detection — the mixed "all" overview leaderboard.
+  // Specific leaderboards live at sub-paths like /leaderboard/text, /leaderboard/text-to-image, etc.
+  // On the root overview there is very little horizontal space, so we only inject Pricing.
+  function isPlainLeaderboard() {
+    const path = window.location.pathname;
+    return path === '/leaderboard' || path === '/leaderboard/';
+  }
+
   // ============================================
   // Token Unit Helpers
   // ============================================
@@ -91,7 +99,7 @@
   // 0.97 = gentle exponential decay (recommended)
   // 0.95 = moderate decay
   // 0.90 = aggressive decay
-  const RANK_DECAY_BASE = 0.85;
+  const RANK_DECAY_BASE = 0.79;
 
   /**
    * Calculate Value Score using logarithmic price compression with exponential rank penalty
@@ -1126,12 +1134,15 @@
           table.setAttribute(CONFIG.COLUMN_MARKER, 'true');
           this.processedTables.add(table);
         }
-        // Always inject headers if they don't exist in DOM
+        // Always inject Pricing header
         this._injectHeader(headerRow, showLoading);
-        this._injectBfbHeader(headerRow, showLoading);
-        this._injectModelAgeHeader(headerRow, showLoading);
-        this._injectContextWindowHeader(headerRow, showLoading);
-        this._injectModalitiesHeader(headerRow, showLoading);
+        // Only inject extra columns when there is enough space
+        if (!isPlainLeaderboard()) {
+          this._injectBfbHeader(headerRow, showLoading);
+          this._injectModelAgeHeader(headerRow, showLoading);
+          this._injectContextWindowHeader(headerRow, showLoading);
+          this._injectModalitiesHeader(headerRow, showLoading);
+        }
 
         // Copy sticky/background styles from native headers so ours scroll correctly
         this._matchNativeHeaderStyles(headerRow);
@@ -1191,10 +1202,12 @@
         newRowCount++;
         row.setAttribute(CONFIG.ROW_MARKER, 'true');
         this._injectCell(row, modelColumnIndex, showLoading);
-        this._injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
-        this._injectModelAgeCell(row, modelColumnIndex, showLoading);
-        this._injectContextWindowCell(row, modelColumnIndex, showLoading);
-        this._injectModalitiesCell(row, modelColumnIndex, showLoading);
+        if (!isPlainLeaderboard()) {
+          this._injectBfbCell(row, modelColumnIndex, arenaScoreColumnIndex, showLoading);
+          this._injectModelAgeCell(row, modelColumnIndex, showLoading);
+          this._injectContextWindowCell(row, modelColumnIndex, showLoading);
+          this._injectModalitiesCell(row, modelColumnIndex, showLoading);
+        }
       });
 
       return newRowCount;
