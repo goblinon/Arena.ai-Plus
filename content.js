@@ -57,6 +57,11 @@
   let currentColumnVisibility = { ...CONFIG.DEFAULT_COLUMN_VISIBILITY };
   let battleNotificationEnabled = false;
 
+  // Labs view detection
+  function isLabsView() {
+    return new URLSearchParams(window.location.search).get('rankBy') === 'labs';
+  }
+
   // ============================================
   // Token Unit Helpers
   // ============================================
@@ -1351,10 +1356,15 @@
 
     _findModelColumnIndex(headerRow) {
       const cells = headerRow.querySelectorAll('th, td');
+      const labsView = isLabsView();
 
       for (let i = 0; i < cells.length; i++) {
         const text = cells[i].textContent.toLowerCase().trim();
-        if (text === 'model' || text === 'model name' || text.includes('model')) {
+        // In Labs view, the "Lab" column contains the lab name + best model
+        if (labsView && text === 'lab') {
+          return i;
+        }
+        if (!labsView && (text === 'model' || text === 'model name' || text.includes('model'))) {
           return i;
         }
       }
@@ -1840,6 +1850,16 @@
     }
 
     _extractModelName(cell) {
+      // In Labs view, the cell shows: Lab Name (main span) + model-name · License (subtitle span)
+      // The subtitle uses class "text-text-secondary" in Arena.ai's DOM
+      if (isLabsView()) {
+        const subtitle = cell.querySelector('.text-text-secondary');
+        if (subtitle) {
+          // Strip license suffix like " · Proprietary" or " · Open Source"
+          return subtitle.textContent.trim().split(/\s*·\s*/)[0].trim();
+        }
+      }
+
       const link = cell.querySelector('a');
       if (link) return link.textContent.trim();
 
@@ -1972,6 +1992,17 @@
     columnInjector.updateAllCells();
     applyColumnVisibility();
     tableObserver.start();
+
+    // Watch for URL changes (Models/Labs toggle is SPA navigation)
+    let lastUrl = window.location.href;
+    new MutationObserver(() => {
+      if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        columnInjector.clearAllInjections();
+        sortManager.reset();
+        tableObserver.reprocessAll(false);
+      }
+    }).observe(document.body, { childList: true, subtree: true });
 
     // Initialize notification manager
     notificationManager = new NotificationManager();
