@@ -1,4 +1,4 @@
-# <img src="icons/arenaaiplus-icon.svg" width="28" align="top"> Arena.ai Plus
+# Arena.ai Plus <img src="icons/arenaaiplus-icon.svg" width="36" align="top">
 
 *Formerly known as LMArena Plus*
 
