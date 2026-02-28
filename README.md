@@ -6,7 +6,7 @@
 [![Manifest](https://img.shields.io/badge/manifest-v3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License](https://img.shields.io/badge/license-GPLv3-orange.svg)](LICENSE)
 
-**Arena.ai Plus** is a Chrome Extension that helps you **save on API expenses** by enriching the [Arena.ai](https://arena.ai/leaderboard) leaderboards with real-time pricing data, a "Bang for Buck" value metric, and deeper model insights - giving you the context you need to pick the smartest model at the right price.
+**Arena.ai Plus** is a Chrome Extension that infuses the power of Arena.ai's human-vetted blind scoring with the context needed to make actual business decisions. It enriches the [Arena.ai](https://arena.ai/leaderboard) leaderboards with real-time pricing data, a "Bang for Buck" value metric, and deeper model insights - helping you **save on API expenses** by picking the smartest model at the right price.
 
 ---
 
