@@ -99,7 +99,7 @@
   // 0.97 = gentle exponential decay (recommended)
   // 0.95 = moderate decay
   // 0.90 = aggressive decay
-  const RANK_DECAY_BASE = 0.79;
+  const RANK_DECAY_BASE = 0.88;
 
   /**
    * Calculate Value Score using logarithmic price compression with exponential rank penalty
@@ -775,6 +775,7 @@
       this.showTimeout = null;
       this.hideTimeout = null;
       this.currentElement = null;
+      this.iconUrl = chrome.runtime.getURL('icons/arenaaiplus-icon.svg');
       this._createTooltip();
     }
 
@@ -808,7 +809,13 @@
       const sourceModelName = pricing.sourceModelName || 'Unknown model';
 
       this._showTooltipContent(element, `
-        <div class="lmarena-price-tooltip__total">${sourceModelName}</div>
+        <div class="lmarena-price-tooltip__header">
+          <span class="lmarena-price-tooltip__header-title">${sourceModelName}</span>
+          <span class="lmarena-price-tooltip__header-brand">
+            <span class="lmarena-price-tooltip__header-brand-text"><em>Arena</em>.ai Plus</span>
+            <img src="${this.iconUrl}" class="lmarena-price-tooltip__header-icon" alt="">
+          </span>
+        </div>
         <div class="lmarena-price-tooltip__breakdown">
           <div class="lmarena-price-tooltip__row">
             <span class="lmarena-price-tooltip__label">Input tokens:</span>
@@ -840,7 +847,13 @@
       const formatRow = (mods) => mods.map(k => MODALITY_NAMES[k] || k).join(', ') || 'None';
 
       this._showTooltipContent(element, `
-        <div class="lmarena-price-tooltip__total">Modalities</div>
+        <div class="lmarena-price-tooltip__header">
+          <span class="lmarena-price-tooltip__header-title">Modalities</span>
+          <span class="lmarena-price-tooltip__header-brand">
+            <span class="lmarena-price-tooltip__header-brand-text"><em>Arena</em>.ai Plus</span>
+            <img src="${this.iconUrl}" class="lmarena-price-tooltip__header-icon" alt="">
+          </span>
+        </div>
         <div class="lmarena-price-tooltip__explanation">
           Shows which data types this model can process and generate
         </div>
@@ -884,7 +897,13 @@
       if (!info) return;
 
       this._showTooltipContent(element, `
-        <div class="lmarena-price-tooltip__total">${info.title}</div>
+        <div class="lmarena-price-tooltip__header">
+          <span class="lmarena-price-tooltip__header-title">${info.title}</span>
+          <span class="lmarena-price-tooltip__header-brand">
+            <span class="lmarena-price-tooltip__header-brand-text"><em>Arena</em>.ai Plus</span>
+            <img src="${this.iconUrl}" class="lmarena-price-tooltip__header-icon" alt="">
+          </span>
+        </div>
         <div class="lmarena-price-tooltip__explanation">${info.description}</div>
         <div class="lmarena-price-tooltip__source">Click to sort (where available)</div>
       `, delay);
@@ -951,17 +970,17 @@
       let newDirection;
 
       if (this.currentColumn === columnType) {
-        // Cycle: asc -> desc -> null
-        if (this.currentDirection === 'asc') {
-          newDirection = 'desc';
-        } else if (this.currentDirection === 'desc') {
+        // Cycle: desc -> asc -> null
+        if (this.currentDirection === 'desc') {
+          newDirection = 'asc';
+        } else if (this.currentDirection === 'asc') {
           newDirection = null;
         } else {
-          newDirection = 'asc';
+          newDirection = 'desc';
         }
       } else {
-        // New column, start with ascending
-        newDirection = 'asc';
+        // New column, start with descending (highest first)
+        newDirection = 'desc';
       }
 
       // Reset all buttons to default

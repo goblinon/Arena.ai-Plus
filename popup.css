@@ -1,348 +1,545 @@
 /*
- * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
- * Copyright (C) 2025 LMArena Plus
+ * Arena.ai Plus – Popup Styles
+ * Copyright (C) 2025 Arena.ai Plus
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+
+/* ---- Font faces ---- */
+@font-face {
+  font-family: 'Martina Plantijn';
+  src: url('https://db.onlinewebfonts.com/t/7947a483b0fb19b69955fcad3dc58848.woff2') format('woff2'),
+    url('https://db.onlinewebfonts.com/t/7947a483b0fb19b69955fcad3dc58848.woff') format('woff');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Martina Plantijn';
+  src: url('https://db.onlinewebfonts.com/t/0bb7d8838e26b1174a331afdbe0022e3.woff2') format('woff2'),
+    url('https://db.onlinewebfonts.com/t/0bb7d8838e26b1174a331afdbe0022e3.woff') format('woff');
+  font-weight: 400;
+}
+
+/* ---- Design tokens ---- */
+:root {
+  --bg-base: #18160F;
+  --bg-panel: #1E1B12;
+  --bg-surface: #252118;
+  --bg-hover: #2C2819;
+  --border: #4A4430;
+  --border-dim: #383220;
+  --text-primary: #EDE6D6;
+  --text-secondary: #CEC5B0;
+  --text-dim: #8A8070;
+  --accent: #C8BFB0;
+  --accent-dim: #7A7268;
+  --accent-pale: #252320;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', 'Inconsolata', monospace;
+  --serif: 'Martina Plantijn', Palatino, Georgia, serif;
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, var(--lmp-bg-dark) 0%, var(--lmp-bg-dark-alt) 100%);
-    color: var(--lmp-text-secondary);
-    min-width: 320px;
-    padding: 0;
+  background: var(--bg-base);
+  font-family: var(--sans);
+  color: var(--text-secondary);
+  min-width: 318px;
 }
 
-.popup-container {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* ---- Panel ---- */
+.panel {
+  width: 318px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-.popup-title {
-    position: relative;
-    font-family: 'Merriweather', serif;
-    font-style: italic;
-    font-weight: 500;
-    font-size: 18px;
-    color: var(--lmp-accent-green);
-    text-align: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--lmp-border-dark);
-    line-height: 1.2;
-    letter-spacing: 1px;
+.panel::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
+  opacity: 0.9;
 }
 
-.popup-version {
-    position: absolute;
-    right: 0;
-    bottom: 14px;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--lmp-text-subtle);
-    line-height: 1;
+/* ---- Header ---- */
+.header {
+  padding: 15px 20px 13px;
+  border-bottom: 1px solid var(--border-dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.setting-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.setting-row {
-    display: flex;
-    gap: 12px;
+.header-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
-.setting-field {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.pillar-mark {
+  width: 2px;
+  height: 20px;
+  background: var(--accent);
+  opacity: 0.85;
+  flex-shrink: 0;
 }
 
-.setting-field-label {
-    font-size: 11px;
-    color: var(--lmp-text-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.title {
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1;
 }
 
-.setting-label {
-    font-size: 13px;
-    color: var(--lmp-text-muted);
+.title em {
+  font-style: italic;
+  color: var(--accent);
 }
 
-.setting-select {
-    width: 100%;
-    padding: 8px 10px;
-    font-size: 13px;
-    background: var(--lmp-bg-surface);
-    color: var(--lmp-text-primary);
-    border: 1px solid var(--lmp-border);
-    border-radius: 6px;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+.version {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  font-weight: 300;
 }
 
-.setting-select:hover {
-    border-color: var(--lmp-bg-surface-hover);
+/* ---- Sections ---- */
+.section {
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border-dim);
 }
 
-.setting-select:focus {
-    border-color: var(--lmp-accent-green);
-    box-shadow: 0 0 0 2px var(--lmp-focus-glow);
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
 }
 
-.setting-select option {
-    background: var(--lmp-bg-surface);
-    color: var(--lmp-text-primary);
+/* ---- Select row ---- */
+.select-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.button-row {
-    display: flex;
-    gap: 8px;
+.select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.donate-button {
-    flex: 1;
-    padding: 8px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--lmp-text-primary);
-    background: linear-gradient(135deg, #2a3c4e 0%, #ff00ff 100%);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
+.select-sublabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
 }
 
-.donate-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 0, 255, 0.3);
+.select-wrapper {
+  position: relative;
 }
 
-.donate-button:active {
-    transform: translateY(0);
+select {
+  width: 100%;
+  appearance: none;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 7px 24px 7px 9px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  border-radius: 2px;
 }
 
-.github-button {
-    flex: 1;
-    padding: 8px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--lmp-text-muted);
-    background: transparent;
-    border: 1px solid var(--lmp-border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
+select:hover,
+select:focus {
+  border-color: var(--accent-dim);
+}
+
+select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+/* ---- Columns box ---- */
+.columns-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.column-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border-dim);
+  user-select: none;
+}
+
+.column-item:last-child {
+  border-bottom: none;
+}
+
+.column-item:hover {
+  background: var(--bg-hover);
+}
+
+/* ---- Custom checkbox (animated fill + ripple) ---- */
+.checkbox {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 2px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s;
+  cursor: pointer;
+}
+
+/* Fill – scales up from center on check */
+.checkbox::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scale(0);
+  transform-origin: center;
+  border-radius: 1px;
+  transition: transform 0.22s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+/* Ripple ring that pulses outward on check */
+.checkbox::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 4px;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: none;
+}
+
+.checkbox.checked {
+  border-color: var(--accent);
+}
+
+.checkbox.checked::before {
+  transform: scale(1);
+}
+
+.checkbox.checked.ripple::after {
+  animation: cb-ripple 0.4s ease-out forwards;
+}
+
+@keyframes cb-ripple {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.column-label {
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  flex: 1;
+  line-height: 1;
+  transition: color 0.1s;
+}
+
+.column-item:has(.checkbox.checked) .column-label {
+  color: var(--text-primary);
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+  border: 1px solid var(--accent-dim);
+  padding: 1px 5px;
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+/* ---- Alert / notification row ---- */
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bell-icon {
+  font-size: 11px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.alert-label {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* ---- Toggle switch ---- */
+.toggle {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 9px;
+  transition: background 0.2s;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: all 0.2s;
+}
+
+.toggle.on .toggle-track {
+  background: var(--accent-dim);
+}
+
+.toggle.on .toggle-thumb {
+  left: 19px;
+  background: var(--accent);
+}
+
+/* ---- Notification hint ---- */
+.notification-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 0;
+  padding: 6px 0 0 21px;
+}
+
+.notification-hint:empty {
+  display: none;
+}
+
+.notification-hint--error {
+  color: #e57373;
+}
+
+/* ---- Footer ---- */
+.footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.footer-btn {
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  text-decoration: none;
+  font-weight: 400;
+  transition: all 0.15s;
+  color: var(--text-secondary);
+}
+
+.footer-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .github-icon {
-    grid-column: 1;
-    justify-self: end;
-    margin-right: 6px;
-    width: 16px;
-    height: 16px;
-    filter: invert(0.6);
-    transition: filter 0.2s;
+  filter: invert(0.6);
+  transition: filter 0.15s;
 }
 
-.github-button:hover .github-icon {
-    filter: invert(1);
+.footer-btn-donate {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border-dim);
 }
 
-.github-button span {
-    grid-column: 2;
-    white-space: nowrap;
+.footer-btn-donate:hover {
+  background: var(--accent-pale);
+  color: var(--text-primary);
 }
 
-.github-button:hover {
-    color: var(--lmp-text-primary);
-    border-color: var(--lmp-border-hover);
+.footer-btn-github {
+  background: var(--bg-surface);
+  color: var(--text-dim);
+  border-top: 1px solid var(--border-dim);
 }
 
-.donate-icon {
-    grid-column: 1;
-    justify-self: end;
-    margin-right: 6px;
-    width: 18px;
-    height: 18px;
+.footer-btn-github:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
 }
 
-.donate-button span {
-    grid-column: 2;
-    white-space: nowrap;
+.footer-btn-github:hover .github-icon {
+  filter: invert(1);
 }
 
+/* ---- Attribution ---- */
 .attribution {
-    font-size: 11px;
-    color: var(--lmp-text-disabled);
-    text-align: center;
-    padding-top: 8px;
-    border-top: 1px solid var(--lmp-border);
+  padding: 7px 20px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  border-top: 1px solid var(--border-dim);
 }
 
 .attribution a {
-    color: var(--lmp-accent-green);
-    text-decoration: none;
+  color: var(--accent-dim);
+  text-decoration: none;
 }
 
 .attribution a:hover {
-    text-decoration: underline;
+  color: var(--accent);
 }
 
-/* Column Picker Styles */
-.column-picker {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: var(--lmp-bg-surface);
-    border: 1px solid var(--lmp-border);
-    border-radius: 6px;
-    padding: 10px;
-    overflow: visible;
+/* ---- Tooltip (shared with content script) ---- */
+.lmarena-price-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-secondary);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  min-width: 200px;
+  max-width: 280px;
 }
 
-.plus-badge {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--lmp-accent-green);
-    margin-left: 4px;
+.lmarena-price-tooltip--visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    padding: 2px 0;
-    transition: opacity 0.2s;
+.lmarena-price-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-dim);
 }
 
-.checkbox-item:hover {
-    opacity: 0.9;
+.lmarena-price-tooltip__header-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
-.checkbox-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--lmp-accent-green);
-    cursor: pointer;
-    margin: 0;
+.lmarena-price-tooltip__header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-word;
 }
 
-.checkbox-label {
-    font-size: 13px;
-    color: var(--lmp-text-secondary);
-    user-select: none;
+.lmarena-price-tooltip__header-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Toggle Switch Styles */
-.toggle-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    padding: 10px;
-    transition: opacity 0.2s;
+.lmarena-price-tooltip__header-brand-text {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.toggle-item:hover {
-    opacity: 0.9;
+.lmarena-price-tooltip__header-brand-text em {
+  font-style: italic;
+  color: var(--accent);
 }
 
-.toggle-label {
-    font-size: 13px;
-    color: var(--lmp-text-secondary);
-    user-select: none;
-}
-
-.toggle-switch {
-    position: relative;
-    width: 40px;
-    height: 22px;
-    flex-shrink: 0;
-}
-
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--lmp-border);
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-    border-radius: 22px;
-}
-
-.toggle-slider::before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--lmp-text-muted);
-    transition: transform 0.25s ease, background-color 0.25s ease;
-    border-radius: 50%;
-}
-
-.toggle-switch input:checked+.toggle-slider {
-    background-color: var(--lmp-accent-green);
-    box-shadow: 0 0 8px var(--lmp-shadow-glow);
-}
-
-.toggle-switch input:checked+.toggle-slider::before {
-    transform: translateX(18px);
-    background-color: var(--lmp-text-primary);
-}
-
-.toggle-switch input:disabled+.toggle-slider {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Notification Toggle Container */
-.notification-toggle {
-    background: var(--lmp-bg-surface);
-    border: 1px solid var(--lmp-border);
-    border-radius: 6px;
-}
-
-.setting-hint {
-    font-size: 11px;
-    color: var(--lmp-text-subtle);
-    margin: 0;
-    padding: 0 4px;
-}
-
-.setting-hint--error {
-    color: #e57373;
+.lmarena-price-tooltip__explanation {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-style: italic;
 }

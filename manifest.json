@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Arena.ai Plus",
-  "version": "2.2.3",
-  "description": "Enhances Arena.ai leaderboards with Pricing, Bang for Buck, Context Size & Modalities columns, plus gen alerts!",
+  "version": "3.0.0",
+  "description": "Enhances the Arena.ai leaderboards with Pricing, Bang for Buck, Context Size & Modalities columns, plus gen alerts!",
   "permissions": [
     "storage",
     "tabs"

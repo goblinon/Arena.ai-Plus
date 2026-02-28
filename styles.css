@@ -1,6 +1,6 @@
 /*
- * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
- * Copyright (C) 2025 LMArena Plus
+ * Arena.ai Plus – Content Script Styles
+ * Copyright (C) 2025 Arena.ai Plus
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -8,49 +8,47 @@
  * (at your option) any later version.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
+
 /* ============================================ */
 /* Color Palette - Single Source of Truth      */
 /* ============================================ */
 
 :root {
   /* Accent colors */
-  --lmp-accent-green: #00ffff;
-  --lmp-accent-green-dark: #00cc33;
-  --lmp-accent-blue: #60a5fa;
-  --lmp-accent-purple: #a78bfa;
+  --lmp-accent: #C8BFB0;
+  --lmp-accent-dim: #7A7268;
+  --lmp-accent-warm: #B0A898;
 
   /* Background colors */
-  --lmp-bg-dark: #121212;
-  --lmp-bg-dark-alt: #1a1a1a;
-  --lmp-bg-surface: #2a2a4e;
-  --lmp-bg-surface-hover: #4a4a7e;
+  --lmp-bg-dark: #18160F;
+  --lmp-bg-dark-alt: #1E1B12;
+  --lmp-bg-surface: #252118;
+  --lmp-bg-hover: #2C2819;
 
   /* Border colors */
-  --lmp-border: #3a3a5e;
-  --lmp-border-dark: #333;
-  --lmp-border-hover: #5a5a8e;
+  --lmp-border: #4A4430;
+  --lmp-border-dim: #383220;
 
   /* Text colors */
-  --lmp-text-primary: #fff;
-  --lmp-text-secondary: #e0e0e0;
-  --lmp-text-muted: #a0a0a0;
-  --lmp-text-subtle: #888;
-  --lmp-text-disabled: #666;
+  --lmp-text-primary: #EDE6D6;
+  --lmp-text-secondary: #CEC5B0;
+  --lmp-text-muted: #8A8070;
+  --lmp-text-dim: #7A7268;
 
-  /* Hover effect */
-  --lmp-hover-glow: rgba(0, 255, 65, 0.05);
-  --lmp-focus-glow: rgba(0, 255, 65, 0.2);
+  /* Effects */
+  --lmp-hover-glow: rgba(200, 191, 176, 0.06);
   --lmp-shadow: rgba(0, 0, 0, 0.6);
-  --lmp-shadow-glow: rgba(0, 255, 65, 0.3);
+
+  /* Fonts */
+  --lmp-sans: 'DM Sans', system-ui, sans-serif;
+  --lmp-mono: 'DM Mono', 'Inconsolata', monospace;
 }
 
 /* ============================================ */
 /* Shared Column Styles (Base Classes)         */
 /* ============================================ */
 
-/* Header styling inherited from native classes via _matchNativeHeaderStyles at runtime */
-
-/* Shared column cell base */
 .lmarena-price-cell,
 .lmarena-bfb-cell,
 .lmarena-age-cell,
@@ -90,20 +88,20 @@
 .lmarena-age-cell--na,
 .lmarena-ctx-cell--na,
 .lmarena-mod-cell--na {
-  color: var(--lmp-text-subtle);
+  color: var(--lmp-text-muted);
   font-style: italic;
 }
 
-/* Shared loading state base */
+/* Shared loading state */
 .lmarena-price-cell--loading,
 .lmarena-bfb-cell--loading,
 .lmarena-age-cell--loading,
 .lmarena-ctx-cell--loading,
 .lmarena-mod-cell--loading {
-  color: var(--lmp-text-disabled);
+  color: var(--lmp-text-dim);
 }
 
-/* Shared loading spinner base */
+/* Shared loading spinner */
 .lmarena-price-cell--loading::after,
 .lmarena-bfb-cell--loading::after,
 .lmarena-age-cell--loading::after,
@@ -115,31 +113,10 @@
   height: 14px;
   margin-left: 6px;
   border: 2px solid var(--lmp-border);
+  border-top-color: var(--lmp-accent);
   border-radius: 50%;
   animation: lmarena-spin 0.8s linear infinite;
   vertical-align: middle;
-}
-
-/* Loading spinner accent colors */
-.lmarena-price-cell--loading::after,
-.lmarena-bfb-cell--loading::after {
-  border-top-color: var(--lmp-accent-green);
-  /* Green */
-}
-
-.lmarena-age-cell--loading::after {
-  border-top-color: var(--lmp-accent-blue);
-  /* Blue */
-}
-
-.lmarena-ctx-cell--loading::after {
-  border-top-color: var(--lmp-accent-blue);
-  /* Blue */
-}
-
-.lmarena-mod-cell--loading::after {
-  border-top-color: var(--lmp-accent-purple);
-  /* Purple */
 }
 
 @keyframes lmarena-spin {
@@ -185,7 +162,7 @@
 }
 
 /* ============================================ */
-/* Pricing Column Specifics */
+/* Pricing Column */
 /* ============================================ */
 
 .lmarena-price-cell {
@@ -193,7 +170,6 @@
   cursor: help;
 }
 
-/* Pricing cell layout - stacked display */
 .lmarena-price-total,
 .lmarena-price-breakdown {
   pointer-events: none;
@@ -208,7 +184,7 @@
 
 .lmarena-price-breakdown {
   font-size: 11px;
-  color: var(--lmp-text-subtle);
+  color: var(--lmp-text-muted);
   line-height: 1.2;
   margin-top: 2px;
 }
@@ -219,7 +195,7 @@ table td.lmarena-price-cell {
 }
 
 /* ============================================ */
-/* Bang for Buck Column Specifics */
+/* Bang for Buck Column */
 /* ============================================ */
 
 .lmarena-bfb-cell {
@@ -239,7 +215,7 @@ table td.lmarena-bfb-cell {
 }
 
 /* ============================================ */
-/* Model Age Column Specifics */
+/* Model Age Column */
 /* ============================================ */
 
 .lmarena-age-cell {
@@ -258,7 +234,7 @@ table td.lmarena-age-cell {
 }
 
 /* ============================================ */
-/* Context Window Column Specifics */
+/* Context Window Column */
 /* ============================================ */
 
 .lmarena-ctx-cell {
@@ -271,7 +247,7 @@ table td.lmarena-ctx-cell {
 }
 
 /* ============================================ */
-/* Modalities Column Specifics */
+/* Modalities Column */
 /* ============================================ */
 
 .lmarena-mod-cell {
@@ -297,12 +273,10 @@ table td.lmarena-ctx-cell {
   height: 14px;
 }
 
-/* Dark mode: invert icons to white */
 html.dark .lmarena-mod-icon {
   filter: invert(1);
 }
 
-/* Light mode: keep icons black (no filter needed) */
 html.light .lmarena-mod-icon {
   filter: none;
 }
@@ -327,12 +301,12 @@ table td.lmarena-mod-cell {
 .lmarena-price-tooltip {
   position: fixed;
   z-index: 10000;
-  background: var(--lmp-bg-dark);
-  border: 1px solid var(--lmp-border-dark);
-  border-radius: 8px;
+  background: var(--lmp-bg-dark-alt);
+  border: 1px solid var(--lmp-border);
+  border-radius: 4px;
   padding: 12px 16px;
   box-shadow: 0 4px 20px var(--lmp-shadow);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--lmp-sans);
   font-size: 13px;
   color: var(--lmp-text-secondary);
   pointer-events: none;
@@ -348,15 +322,49 @@ table td.lmarena-mod-cell {
   transform: translateY(0);
 }
 
-.lmarena-price-tooltip__total,
-.lmarena-price-tooltip__model-name {
+.lmarena-price-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--lmp-border-dim);
+}
+
+.lmarena-price-tooltip__header-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.lmarena-price-tooltip__header-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--lmp-text-primary);
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--lmp-border-dark);
   word-break: break-word;
+}
+
+.lmarena-price-tooltip__header-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.lmarena-price-tooltip__header-brand-text {
+  font-family: 'Martina Plantijn', Palatino, Georgia, serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--lmp-text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lmarena-price-tooltip__header-brand-text em {
+  font-style: italic;
+  color: var(--lmp-accent);
 }
 
 .lmarena-price-tooltip__breakdown {
@@ -378,22 +386,22 @@ table td.lmarena-mod-cell {
 }
 
 .lmarena-price-tooltip__value {
-  font-family: baselGroteskMono, "baselGroteskMono Fallback", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--lmp-accent-green);
+  font-family: var(--lmp-mono);
+  color: var(--lmp-accent);
 }
 
 .lmarena-price-tooltip__source {
   font-size: 11px;
-  color: var(--lmp-text-disabled);
+  color: var(--lmp-text-dim);
   text-align: left;
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid var(--lmp-border-dark);
+  border-top: 1px solid var(--lmp-border-dim);
 }
 
 .lmarena-price-tooltip__explanation {
   font-size: 12.5px;
-  color: var(--lmp-text-subtle);
+  color: var(--lmp-text-muted);
   margin-bottom: 10px;
   font-style: italic;
 }

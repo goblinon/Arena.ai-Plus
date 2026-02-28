@@ -14,93 +14,125 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arena.ai Plus</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@1,18..144,500&display=swap"
+  <link href="https://db.onlinewebfonts.com/c/7947a483b0fb19b69955fcad3dc58848?family=Test+Martina+Plantijn+Light"
     rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://db.onlinewebfonts.com/c/0bb7d8838e26b1174a331afdbe0022e3?family=Test+Martina+Plantijn"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@300;400&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
-  <div class="popup-container">
-    <h1 class="popup-title">Arena.ai Plus<span class="popup-version" id="popup-version"></span></h1>
+  <div class="panel">
+    <div class="header">
+      <div class="header-left">
+        <div class="pillar-mark"></div>
+        <div class="title"><em>Arena</em>.ai Plus</div>
+        <img src="icons/arenaaiplus-icon.svg" class="header-icon" alt="Arena.ai Plus">
+      </div>
+      <span class="version" id="popup-version"></span>
+    </div>
 
-    <div class="setting-group">
-      <div class="setting-row">
-        <div class="setting-field">
-          <span class="setting-field-label">Pricing Provider</span>
-          <select id="data-provider" class="setting-select">
-            <option value="openrouter">OpenRouter</option>
-            <option value="litellm">LiteLLM</option>
-            <option value="helicone">Helicone</option>
-          </select>
+    <div class="section">
+      <div class="section-label">Pricing Column Settings</div>
+      <div class="select-row">
+        <div class="select-group">
+          <span class="select-sublabel">Provider</span>
+          <div class="select-wrapper">
+            <select id="data-provider">
+              <option value="openrouter">OpenRouter</option>
+              <option value="litellm">LiteLLM</option>
+              <option value="helicone">Helicone</option>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
         </div>
-        <div class="setting-field">
-          <span class="setting-field-label">Price per Tokens</span>
-          <select id="token-unit" class="setting-select">
-            <option value="1000000">1M tokens</option>
-            <option value="100000">100K tokens</option>
-          </select>
+        <div class="select-group">
+          <span class="select-sublabel">Price per</span>
+          <div class="select-wrapper">
+            <select id="token-unit">
+              <option value="1000000">1M tokens</option>
+              <option value="100000">100K tokens</option>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="setting-group">
-      <span class="setting-field-label">Columns</span>
-      <div class="column-picker">
-        <label class="checkbox-item">
-          <input type="checkbox" id="col-rank" data-column="rank" checked>
-          <span class="checkbox-label">Rank Spread</span>
-        </label>
-        <label class="checkbox-item">
-          <input type="checkbox" id="col-arena-score" data-column="arena-score" checked>
-          <span class="checkbox-label">Score</span>
-        </label>
-        <label class="checkbox-item">
-          <input type="checkbox" id="col-votes" data-column="votes" checked>
-          <span class="checkbox-label">Votes</span>
-        </label>
-        <label class="checkbox-item" data-tooltip="pricing">
-          <input type="checkbox" id="col-pricing" data-column="pricing" checked>
-          <span class="checkbox-label"><span id="pricing-label">Pricing per 1M</span> <span
-              class="plus-badge">Plus</span></span>
-        </label>
-        <label class="checkbox-item" data-tooltip="bang-for-buck">
-          <input type="checkbox" id="col-bang-for-buck" data-column="bang-for-buck" checked>
-          <span class="checkbox-label">Bang for Buck <span class="plus-badge">Plus</span></span>
-        </label>
-        <label class="checkbox-item" data-tooltip="model-age">
-          <input type="checkbox" id="col-model-age" data-column="model-age" checked>
-          <span class="checkbox-label">Model Age <span class="plus-badge">Plus</span></span>
-        </label>
-        <label class="checkbox-item" data-tooltip="context-window">
-          <input type="checkbox" id="col-context-window" data-column="context-window" checked>
-          <span class="checkbox-label">Context Size <span class="plus-badge">Plus</span></span>
-        </label>
-        <label class="checkbox-item" data-tooltip="modalities">
-          <input type="checkbox" id="col-modalities" data-column="modalities" checked>
-          <span class="checkbox-label">Modalities <span class="plus-badge">Plus</span></span>
-        </label>
+    <div class="section">
+      <div class="section-label">Visible Columns</div>
+      <div class="columns-box">
+        <div class="column-item" data-tooltip="rank">
+          <input type="checkbox" id="col-rank" data-column="rank" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Rank Spread</span>
+        </div>
+        <div class="column-item">
+          <input type="checkbox" id="col-arena-score" data-column="arena-score" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Score</span>
+        </div>
+        <div class="column-item">
+          <input type="checkbox" id="col-votes" data-column="votes" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Votes</span>
+        </div>
+        <div class="column-item" data-tooltip="pricing">
+          <input type="checkbox" id="col-pricing" data-column="pricing" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label"><span id="pricing-label">Pricing per 1M</span></span>
+          <span class="badge">Plus</span>
+        </div>
+        <div class="column-item" data-tooltip="bang-for-buck">
+          <input type="checkbox" id="col-bang-for-buck" data-column="bang-for-buck" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Bang for Buck</span>
+          <span class="badge">Plus</span>
+        </div>
+        <div class="column-item" data-tooltip="model-age">
+          <input type="checkbox" id="col-model-age" data-column="model-age" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Model Age</span>
+          <span class="badge">Plus</span>
+        </div>
+        <div class="column-item" data-tooltip="context-window">
+          <input type="checkbox" id="col-context-window" data-column="context-window" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Context Size</span>
+          <span class="badge">Plus</span>
+        </div>
+        <div class="column-item" data-tooltip="modalities">
+          <input type="checkbox" id="col-modalities" data-column="modalities" checked hidden>
+          <div class="checkbox checked"></div>
+          <span class="column-label">Modalities</span>
+          <span class="badge">Plus</span>
+        </div>
       </div>
     </div>
 
-    <div class="setting-group">
-      <label class="toggle-item notification-toggle" data-tooltip="notification">
-        <span class="toggle-label">🔔 Generation Complete Alerts</span>
-        <div class="toggle-switch">
-          <input type="checkbox" id="battle-notification">
-          <span class="toggle-slider"></span>
+    <div class="section" data-tooltip="notification">
+      <div class="alert-row">
+        <span class="bell-icon">🔔</span>
+        <span class="alert-label">Generation Complete Alerts</span>
+        <input type="checkbox" id="battle-notification" hidden>
+        <div class="toggle" id="notification-toggle">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
         </div>
-      </label>
-      <p class="setting-hint" id="notification-hint"></p>
+      </div>
+      <p class="notification-hint" id="notification-hint"></p>
     </div>
 
-    <div class="button-row">
-      <a href="https://ko-fi.com/arenaaiplus" target="_blank" class="donate-button"><img src="icons/kofi_symbol.svg"
-          class="donate-icon" alt="Ko-fi"> <span>Donate</span></a>
-      <a href="https://github.com/goblinon/Arena.ai-Plus" target="_blank" class="github-button"><img
-          src="icons/github-mark.svg" class="github-icon" alt="GitHub"> <span>GitHub</span></a>
+    <div class="footer">
+      <a href="https://ko-fi.com/arenaaiplus" target="_blank" class="footer-btn footer-btn-donate">
+        <img src="icons/kofi_symbol.svg" class="footer-icon" alt="Ko-fi"> Donate
+      </a>
+      <a href="https://github.com/goblinon/Arena.ai-Plus" target="_blank" class="footer-btn footer-btn-github">
+        <img src="icons/github-mark.svg" class="footer-icon github-icon" alt="GitHub"> GitHub
+      </a>
     </div>
 
     <div class="attribution" id="attribution">

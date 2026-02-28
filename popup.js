@@ -1,6 +1,6 @@
 /*
- * LMArena Plus - Adds pricing and other useful data to LMArena's leaderboard tables.
- * Copyright (C) 2025 LMArena Plus
+ * Arena.ai Plus – Popup Script
+ * Copyright (C) 2025 Arena.ai Plus
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -11,13 +11,12 @@
 (function () {
     'use strict';
 
-    const DEFAULT_TOKEN_UNIT = 1000000; // 1M tokens
+    const DEFAULT_TOKEN_UNIT = 1000000;
     const DEFAULT_PROVIDER = 'openrouter';
     const TOKEN_UNIT_KEY = 'lmarena-token-unit';
     const PROVIDER_KEY = 'lmarena-data-provider';
     const COLUMN_VISIBILITY_KEY = 'lmarena-column-visibility';
 
-    // Default column visibility - all columns visible
     const DEFAULT_COLUMN_VISIBILITY = {
         'rank': true,
         'arena-score': true,
@@ -35,21 +34,58 @@
         litellm: 'https://github.com/BerriAI/litellm'
     };
 
+    // DOM refs
     const tokenUnitSelect = document.getElementById('token-unit');
     const dataProviderSelect = document.getElementById('data-provider');
     const attributionDiv = document.getElementById('attribution');
-    const columnCheckboxes = document.querySelectorAll('.column-picker input[type="checkbox"]');
     const pricingLabel = document.getElementById('pricing-label');
-    const battleNotificationCheckbox = document.getElementById('battle-notification');
+    const battleNotificationInput = document.getElementById('battle-notification');
+    const notificationToggle = document.getElementById('notification-toggle');
     const notificationHint = document.getElementById('notification-hint');
+    const columnItems = document.querySelectorAll('.column-item');
 
-    // Update pricing label based on token unit
-    function updatePricingLabel(unit) {
-        const label = unit === 1000000 ? 'Pricing per 1M' : 'Pricing per 100K';
-        pricingLabel.textContent = label;
+    // ---- Column checkbox toggle with animation ----
+    function toggleColumnItem(item) {
+        const input = item.querySelector('input[type="checkbox"]');
+        const cb = item.querySelector('.checkbox');
+        if (!input || !cb) return;
+
+        input.checked = !input.checked;
+        cb.classList.toggle('checked', input.checked);
+
+        // Trigger ripple animation on check
+        if (input.checked) {
+            cb.classList.remove('ripple');
+            void cb.offsetWidth; // force reflow
+            cb.classList.add('ripple');
+        }
+
+        savePreference(COLUMN_VISIBILITY_KEY, getColumnVisibility(), 'COLUMN_VISIBILITY_CHANGED');
     }
 
-    // Load saved preferences
+    columnItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Don't toggle if user clicked the item for tooltip purposes on a non-checkbox area
+            if (e.target.closest('.badge')) return;
+            toggleColumnItem(item);
+        });
+    });
+
+    // ---- Notification toggle ----
+    notificationToggle.addEventListener('click', () => {
+        const newState = !battleNotificationInput.checked;
+        battleNotificationInput.checked = newState;
+        notificationToggle.classList.toggle('on', newState);
+        savePreference(BATTLE_NOTIFICATION_KEY, newState, 'BATTLE_NOTIFICATION_CHANGED');
+        updateNotificationHint();
+    });
+
+    // ---- Pricing label ----
+    function updatePricingLabel(unit) {
+        pricingLabel.textContent = unit === 1000000 ? 'Pricing per 1M' : 'Pricing per 100K';
+    }
+
+    // ---- Load saved preferences ----
     async function loadPreferences() {
         try {
             const result = await chrome.storage.sync.get([TOKEN_UNIT_KEY, PROVIDER_KEY, COLUMN_VISIBILITY_KEY, BATTLE_NOTIFICATION_KEY]);
@@ -62,17 +98,23 @@
             dataProviderSelect.value = savedProvider;
             updateAttribution(savedProvider);
 
-            // Load column visibility
+            // Column visibility
             const savedVisibility = result[COLUMN_VISIBILITY_KEY] || DEFAULT_COLUMN_VISIBILITY;
-            columnCheckboxes.forEach(checkbox => {
-                const columnId = checkbox.getAttribute('data-column');
+            columnItems.forEach(item => {
+                const input = item.querySelector('input[type="checkbox"]');
+                const cb = item.querySelector('.checkbox');
+                if (!input || !cb) return;
+                const columnId = input.getAttribute('data-column');
                 if (columnId && savedVisibility.hasOwnProperty(columnId)) {
-                    checkbox.checked = savedVisibility[columnId];
+                    input.checked = savedVisibility[columnId];
+                    cb.classList.toggle('checked', input.checked);
                 }
             });
 
+            // Notification
             const notificationEnabled = result[BATTLE_NOTIFICATION_KEY] ?? true;
-            battleNotificationCheckbox.checked = notificationEnabled;
+            battleNotificationInput.checked = notificationEnabled;
+            notificationToggle.classList.toggle('on', notificationEnabled);
             updateNotificationHint();
         } catch (error) {
             console.warn('Failed to load preferences:', error);
@@ -81,35 +123,32 @@
         }
     }
 
-    // Update notification hint based on permission status
+    // ---- Notification hint ----
     function updateNotificationHint() {
-        // Only show hint for error states - keep UI clean otherwise
         if (!('Notification' in window)) {
             notificationHint.textContent = 'Notifications not supported in this browser';
-            notificationHint.className = 'setting-hint setting-hint--error';
-            battleNotificationCheckbox.disabled = true;
+            notificationHint.className = 'notification-hint notification-hint--error';
+            notificationToggle.style.pointerEvents = 'none';
+            notificationToggle.style.opacity = '0.5';
         } else if (Notification.permission === 'denied') {
             notificationHint.textContent = 'Notifications blocked. Enable in browser settings.';
-            notificationHint.className = 'setting-hint setting-hint--error';
+            notificationHint.className = 'notification-hint notification-hint--error';
         } else {
-            // Clear hint for normal states - tooltip explains the feature
             notificationHint.textContent = '';
-            notificationHint.className = 'setting-hint';
+            notificationHint.className = 'notification-hint';
         }
     }
 
-    // Update attribution based on selected provider
+    // ---- Attribution ----
     function updateAttribution(provider) {
         attributionDiv.textContent = 'All data is provided by ';
 
-        // Always show OpenRouter first
         const openRouterLink = document.createElement('a');
         openRouterLink.href = PROVIDER_URLS.openrouter;
         openRouterLink.target = '_blank';
         openRouterLink.textContent = 'OpenRouter';
         attributionDiv.appendChild(openRouterLink);
 
-        // Add secondary provider if not OpenRouter
         if (provider !== 'openrouter') {
             attributionDiv.appendChild(document.createTextNode(', '));
             const secondaryLink = document.createElement('a');
@@ -120,39 +159,33 @@
         }
     }
 
-    // Get current column visibility state
+    // ---- Column visibility state ----
     function getColumnVisibility() {
         const visibility = {};
-        columnCheckboxes.forEach(checkbox => {
-            const columnId = checkbox.getAttribute('data-column');
-            if (columnId) {
-                visibility[columnId] = checkbox.checked;
+        columnItems.forEach(item => {
+            const input = item.querySelector('input[type="checkbox"]');
+            if (input) {
+                const columnId = input.getAttribute('data-column');
+                if (columnId) visibility[columnId] = input.checked;
             }
         });
         return visibility;
     }
 
-    // Save preference and notify content scripts
+    // ---- Save & notify content scripts ----
     async function savePreference(key, value, messageType) {
         try {
             await chrome.storage.sync.set({ [key]: value });
-
-            // Notify content scripts to update
             const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
             for (const tab of tabs) {
-                chrome.tabs.sendMessage(tab.id, {
-                    type: messageType,
-                    value: value
-                }).catch(() => {
-                    // Tab may not have content script loaded
-                });
+                chrome.tabs.sendMessage(tab.id, { type: messageType, value }).catch(() => { });
             }
         } catch (error) {
             console.warn('Failed to save preference:', error);
         }
     }
 
-    // Event listeners
+    // ---- Select event listeners ----
     tokenUnitSelect.addEventListener('change', (e) => {
         const unit = parseInt(e.target.value, 10);
         updatePricingLabel(unit);
@@ -162,61 +195,45 @@
     dataProviderSelect.addEventListener('change', async (e) => {
         const provider = e.target.value;
         updateAttribution(provider);
-
-        // Save preference first
         await chrome.storage.sync.set({ [PROVIDER_KEY]: provider });
-
-        // Hard reload all LMArena tabs to fetch fresh data from new provider
         const tabs = await chrome.tabs.query({ url: 'https://arena.ai/*' });
         for (const tab of tabs) {
             chrome.tabs.reload(tab.id, { bypassCache: true });
         }
     });
 
-    // Column visibility checkboxes
-    columnCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const visibility = getColumnVisibility();
-            savePreference(COLUMN_VISIBILITY_KEY, visibility, 'COLUMN_VISIBILITY_CHANGED');
-        });
-    });
-
-    // Battle notification toggle
-    battleNotificationCheckbox.addEventListener('change', async () => {
-        const enabled = battleNotificationCheckbox.checked;
-        await savePreference(BATTLE_NOTIFICATION_KEY, enabled, 'BATTLE_NOTIFICATION_CHANGED');
-        updateNotificationHint();
-    });
-
-    // Display version number
+    // ---- Version display ----
     function displayVersion() {
         const versionSpan = document.getElementById('popup-version');
         if (versionSpan && chrome.runtime.getManifest) {
-            const manifest = chrome.runtime.getManifest();
-            versionSpan.textContent = `v${manifest.version}`;
+            versionSpan.textContent = `v${chrome.runtime.getManifest().version}`;
         }
     }
-    // Minimal tooltip handler (uses shared CSS from styles.css and data from shared.js)
+
+    // ---- Tooltip handler ----
     const tooltip = document.getElementById('popup-tooltip');
     let hideTimeout;
 
     document.querySelectorAll('[data-tooltip]').forEach(el => {
         el.addEventListener('mouseenter', () => {
             clearTimeout(hideTimeout);
-            const key = el.dataset.tooltip;
-            const info = COLUMN_TOOLTIPS[key];
+            const info = COLUMN_TOOLTIPS[el.dataset.tooltip];
             if (!info) return;
 
             tooltip.innerHTML = `
-                <div class="lmarena-price-tooltip__total">${info.title}</div>
+                <div class="lmarena-price-tooltip__header">
+                    <span class="lmarena-price-tooltip__header-title">${info.title}</span>
+                    <span class="lmarena-price-tooltip__header-brand">
+                        <span class="lmarena-price-tooltip__header-brand-text"><em>Arena</em>.ai Plus</span>
+                        <img src="icons/arenaaiplus-icon.svg" class="lmarena-price-tooltip__header-icon" alt="">
+                    </span>
+                </div>
                 <div class="lmarena-price-tooltip__explanation">${info.description}</div>
             `;
             tooltip.classList.add('lmarena-price-tooltip--visible');
 
-            // Position above the element (like the rest of the extension)
             const rect = el.getBoundingClientRect();
             tooltip.style.left = `${rect.left}px`;
-            // First render to get tooltip dimensions
             tooltip.style.top = '0px';
             const tooltipHeight = tooltip.offsetHeight;
             tooltip.style.top = `${rect.top - tooltipHeight - 6}px`;
@@ -229,7 +246,7 @@
         });
     });
 
-    // Initialize
+    // ---- Initialize ----
     loadPreferences();
     displayVersion();
 })();
